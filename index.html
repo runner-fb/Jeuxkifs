@@ -371,6 +371,35 @@
         </button>
       </div>
     </section>
+
+    <section id="blocJeu" class="card hidden">
+  <label class="label">Scan jeu (code-barres)</label>
+
+  <div class="input-row">
+    <input
+      id="eanJeu"
+      class="text-input"
+      type="text"
+      placeholder="Scanne ou saisis le code-barres"
+    />
+    <button class="btn btn-primary" onclick="verifierJeu()">
+      Vérifier
+    </button>
+    <button id="btnCameraJeu" class="btn btn-warning" onclick="toggleScannerJeu()">
+      Scanner caméra
+    </button>
+  </div>
+
+  <div id="scannerJeuZone" class="hidden">
+    <div id="readerJeu"></div>
+  </div>
+
+  <div id="jeuResult" class="status-box" style="margin-top:12px;">
+    En attente d’un scan jeu.
+  </div>
+
+  <div id="exemplairesZone" class="results hidden"></div>
+</section>
   </div>
 
   <script>
@@ -577,8 +606,10 @@
     }
 
     function scannerJeu() {
-      setStatus("Étape suivante", "Le scan du jeu sera branché juste après.");
-    }
+  document.getElementById("blocJeu").classList.remove("hidden");
+  document.getElementById("eanJeu").focus();
+  setStatus("Scan jeu", "Scanne ou saisis le code-barres du jeu.");
+}
   </script>
 </body>
 </html>
