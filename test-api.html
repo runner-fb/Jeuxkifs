@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test API JeKiffe</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      background: #f6f7fb;
+      color: #1f2937;
+    }
 
+    .card {
+      max-width: 700px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    input, button {
+      font-size: 16px;
+      padding: 10px 12px;
+      margin-top: 10px;
+    }
+
+    input {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    pre {
+      margin-top: 20px;
+      background: #111827;
+      color: #f9fafb;
+      padding: 16px;
+      border-radius: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Test API JeKiffe</h1>
+
+    <label for="code">ID adhérent</label><br>
+    <input id="code" type="text" value="6248749159185169860" />
+
+    <br>
+    <button onclick="testerAdherent()">Tester getAdherentByCode</button>
+
+    <pre id="result">En attente…</pre>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxvASN1BbWvvwLn2zRg_t_1GgysJaeNk2jJhQMMXHitTdrea8Ub2a3Kq-7pZpBVTMRSLQ/exec";
+
+    async function testerAdherent() {
+      const code = document.getElementById("code").value.trim();
+      const resultBox = document.getElementById("result");
+
+      resultBox.textContent = "Chargement...";
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            action: "getAdherentByCode",
+            code: code
+          })
+        });
+
+        const data = await response.json();
+        resultBox.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        resultBox.textContent = "Erreur : " + error.message;
+      }
+    }
+  </script>
+</body>
+</html>
