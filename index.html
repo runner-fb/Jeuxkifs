@@ -71,18 +71,13 @@
       resultBox.textContent = "Chargement...";
 
       try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            action: "getAdherentByCode",
-            code: code
-          })
-        });
+        const url = API_URL
+  + "?action=getAdherentByCode"
+  + "&code=" + encodeURIComponent(code);
 
-        const data = await response.json();
+const response = await fetch(url);
+const data = await response.json();
+        
         resultBox.textContent = JSON.stringify(data, null, 2);
       } catch (error) {
         resultBox.textContent = "Erreur : " + error.message;
