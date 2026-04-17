@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JeKiffe - Emprunts</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -20,9 +21,7 @@
       --radius: 18px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -32,7 +31,7 @@
     }
 
     .app {
-      max-width: 760px;
+      max-width: 840px;
       margin: 0 auto;
       min-height: 100vh;
       padding: 20px 16px 40px;
@@ -73,9 +72,13 @@
 
     .input-row {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr auto auto;
       gap: 10px;
       align-items: center;
+    }
+
+    .input-row.two {
+      grid-template-columns: 1fr auto;
     }
 
     .text-input {
@@ -106,21 +109,11 @@
       transform: scale(0.98);
     }
 
-    .btn-primary {
-      background: var(--primary);
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-    }
-
-    .btn-success {
-      background: var(--success);
-    }
-
-    .btn-danger {
-      background: var(--danger);
-    }
+    .btn-primary { background: var(--primary); }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-success { background: var(--success); }
+    .btn-danger { background: var(--danger); }
+    .btn-warning { background: var(--warning); }
 
     .status-box {
       border-radius: 14px;
@@ -166,13 +159,8 @@
       color: white;
     }
 
-    .badge-ok {
-      background: var(--success);
-    }
-
-    .badge-ko {
-      background: var(--danger);
-    }
+    .badge-ok { background: var(--success); }
+    .badge-ko { background: var(--danger); }
 
     .motif {
       margin-top: 10px;
@@ -225,8 +213,51 @@
       display: none !important;
     }
 
-    @media (max-width: 640px) {
+    .results {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .result-item {
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fcfcfd;
+      cursor: pointer;
+    }
+
+    .result-item:hover {
+      border-color: var(--primary);
+      background: #eff6ff;
+    }
+
+    .result-main {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .result-sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    #scannerZone {
+      margin-top: 14px;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 420px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 700px) {
       .input-row {
+        grid-template-columns: 1fr;
+      }
+
+      .input-row.two {
         grid-template-columns: 1fr;
       }
 
@@ -245,7 +276,7 @@
     <header class="header">
       <h1 class="title">Gestion des emprunts</h1>
       <p class="subtitle">
-        Vérifie l’adhérent avant de lancer un emprunt.
+        Scanne le code adhérent, utilise la caméra, ou cherche par nom / prénom.
       </p>
     </header>
 
@@ -259,15 +290,39 @@
           placeholder="Scanne ou saisis le code adhérent"
         />
         <button class="btn btn-primary" onclick="verifierAdherent()">
-          Vérifier adhérent
+          Vérifier
+        </button>
+        <button id="btnCamera" class="btn btn-warning" onclick="toggleScanner()">
+          Scanner caméra
         </button>
       </div>
+
+      <div id="scannerZone" class="hidden">
+        <div id="reader"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <label for="searchAdherent" class="label">Recherche nom / prénom</label>
+      <div class="input-row two">
+        <input
+          id="searchAdherent"
+          class="text-input"
+          type="text"
+          placeholder="Exemple : marie, gazé, marie gazé..."
+        />
+        <button class="btn btn-primary" onclick="rechercherAdherents()">
+          Rechercher
+        </button>
+      </div>
+
+      <div id="searchResults" class="results hidden"></div>
     </section>
 
     <section class="card">
       <div id="statusBox" class="status-box">
         <strong>Prêt.</strong><br>
-        En attente d’un scan adhérent.
+        En attente d’un scan ou d’une recherche adhérent.
       </div>
     </section>
 
@@ -322,6 +377,8 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbxvASN1BbWvvwLn2zRg_t_1GgysJaeNk2jJhQMMXHitTdrea8Ub2a3Kq-7pZpBVTMRSLQ/exec";
 
     let adherentCourant = null;
+    let scannerInstance = null;
+    let scannerActif = false;
 
     function setStatus(title, text) {
       const box = document.getElementById("statusBox");
@@ -367,7 +424,10 @@
       adherentCourant = null;
       document.getElementById("ficheAdherent").classList.remove("visible");
       document.getElementById("codeAdherent").value = "";
-      setStatus("Prêt.", "En attente d’un scan adhérent.");
+      document.getElementById("searchAdherent").value = "";
+      document.getElementById("searchResults").innerHTML = "";
+      document.getElementById("searchResults").classList.add("hidden");
+      setStatus("Prêt.", "En attente d’un scan ou d’une recherche adhérent.");
       document.getElementById("codeAdherent").focus();
     }
 
@@ -405,6 +465,115 @@
       } catch (error) {
         setStatus("Erreur", error.message);
       }
+    }
+
+    async function rechercherAdherents() {
+      const query = document.getElementById("searchAdherent").value.trim();
+      const resultsBox = document.getElementById("searchResults");
+
+      if (!query) {
+        setStatus("Recherche vide", "Saisis un nom ou un prénom.");
+        resultsBox.innerHTML = "";
+        resultsBox.classList.add("hidden");
+        return;
+      }
+
+      setStatus("Recherche adhérents", "Recherche en cours...");
+      resultsBox.innerHTML = "";
+      resultsBox.classList.add("hidden");
+
+      try {
+        const url = API_URL
+          + "?action=searchAdherents"
+          + "&query=" + encodeURIComponent(query);
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!data.ok || !Array.isArray(data.results) || data.results.length === 0) {
+          setStatus("Aucun résultat", "Aucun adhérent ne correspond à cette recherche.");
+          return;
+        }
+
+        resultsBox.innerHTML = "";
+        data.results.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "result-item";
+          div.innerHTML = `
+            <div class="result-main">${item.nom_complet}</div>
+            <div class="result-sub">ID : ${item.id_adherent} · Profil : ${item.profil}</div>
+          `;
+          div.onclick = () => {
+            document.getElementById("codeAdherent").value = item.id_adherent;
+            afficherFiche(item);
+
+            if (String(item.peut_emprunter || "").toLowerCase() === "oui") {
+              setStatus("Adhérent sélectionné", "Tu peux passer au scan du jeu.");
+            } else {
+              setStatus("Adhérent bloqué", item.motif_blocage || "Emprunt impossible.");
+            }
+
+            resultsBox.classList.add("hidden");
+          };
+          resultsBox.appendChild(div);
+        });
+
+        resultsBox.classList.remove("hidden");
+        setStatus("Résultats trouvés", "Choisis un adhérent dans la liste.");
+      } catch (error) {
+        setStatus("Erreur", error.message);
+      }
+    }
+
+    async function toggleScanner() {
+      const zone = document.getElementById("scannerZone");
+      const btn = document.getElementById("btnCamera");
+
+      if (scannerActif) {
+        await stopScanner();
+        zone.classList.add("hidden");
+        btn.textContent = "Scanner caméra";
+        setStatus("Scanner arrêté", "Tu peux reprendre une saisie manuelle.");
+        return;
+      }
+
+      zone.classList.remove("hidden");
+      btn.textContent = "Arrêter caméra";
+      setStatus("Scanner caméra", "Présente le code-barres ou le QR code adhérent devant la caméra.");
+
+      try {
+        scannerInstance = new Html5Qrcode("reader");
+        await scannerInstance.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: 250
+          },
+          async (decodedText) => {
+            document.getElementById("codeAdherent").value = decodedText;
+            await stopScanner();
+            zone.classList.add("hidden");
+            btn.textContent = "Scanner caméra";
+            await verifierAdherent();
+          },
+          () => {}
+        );
+
+        scannerActif = true;
+      } catch (error) {
+        zone.classList.add("hidden");
+        btn.textContent = "Scanner caméra";
+        setStatus("Caméra indisponible", error.message || "Impossible de lancer la caméra.");
+      }
+    }
+
+    async function stopScanner() {
+      if (scannerInstance && scannerActif) {
+        await scannerInstance.stop();
+        await scannerInstance.clear();
+      }
+      scannerActif = false;
+      scannerInstance = null;
     }
 
     function scannerJeu() {
