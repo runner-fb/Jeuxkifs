@@ -408,6 +408,10 @@
     let adherentCourant = null;
     let scannerInstance = null;
     let scannerActif = false;
+    let scannerJeuInstance = null;
+let scannerJeuActif = false;
+let jeuCourant = null;
+let exemplaireChoisi = null;
 
     function setStatus(title, text) {
       const box = document.getElementById("statusBox");
@@ -608,7 +612,147 @@
     function scannerJeu() {
   document.getElementById("blocJeu").classList.remove("hidden");
   document.getElementById("eanJeu").focus();
+  document.getElementById("jeuResult").innerHTML = "En attente d’un scan jeu.";
+  document.getElementById("exemplairesZone").innerHTML = "";
+  document.getElementById("exemplairesZone").classList.add("hidden");
+  jeuCourant = null;
+  exemplaireChoisi = null;
+
   setStatus("Scan jeu", "Scanne ou saisis le code-barres du jeu.");
+}
+    async function verifierJeu() {
+  const ean = document.getElementById("eanJeu").value.trim();
+
+  if (!ean) {
+    setStatus("EAN manquant", "Scanne ou saisis un code-barres.");
+    return;
+  }
+
+  setStatus("Recherche jeu", "Vérification en cours...");
+  document.getElementById("exemplairesZone").classList.add("hidden");
+  document.getElementById("exemplairesZone").innerHTML = "";
+  exemplaireChoisi = null;
+
+  try {
+    const url = API_URL
+      + "?action=getJeuByEAN"
+      + "&ean=" + encodeURIComponent(ean);
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.found) {
+      document.getElementById("jeuResult").innerHTML = "Jeu introuvable.";
+      setStatus("Jeu introuvable", data.message || "Aucun résultat.");
+      return;
+    }
+
+    jeuCourant = data;
+
+    document.getElementById("jeuResult").innerHTML =
+      "<strong>" + data.nom_jeu + "</strong>";
+
+    if (!data.emprunt_autorise) {
+      setStatus("Jeu non empruntable", data.message || "Jeu non empruntable.");
+      return;
+    }
+
+    await chargerExemplaires(data.id_jeu);
+
+  } catch (error) {
+    setStatus("Erreur", error.message);
+  }
+}
+    async function chargerExemplaires(idJeu) {
+  setStatus("Recherche exemplaires", "Chargement...");
+
+  try {
+    const url = API_URL
+      + "?action=getExemplairesDisponiblesByJeu"
+      + "&id_jeu=" + encodeURIComponent(idJeu);
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    const zone = document.getElementById("exemplairesZone");
+    zone.innerHTML = "";
+
+    if (!data.exemplaires_disponibles || data.exemplaires_disponibles.length === 0) {
+      setStatus("Aucun exemplaire", "Tous les exemplaires sont empruntés.");
+      return;
+    }
+
+    if (data.exemplaires_disponibles.length === 1) {
+      exemplaireChoisi = data.exemplaires_disponibles[0].id_exemplaire;
+      setStatus("Exemplaire trouvé", "Exemplaire sélectionné automatiquement.");
+      return;
+    }
+
+    data.exemplaires_disponibles.forEach(ex => {
+      const div = document.createElement("div");
+      div.className = "result-item";
+      div.innerHTML = "Exemplaire n°" + ex.numero;
+
+      div.onclick = () => {
+        exemplaireChoisi = ex.id_exemplaire;
+        setStatus("Exemplaire sélectionné", "Exemplaire choisi : " + ex.numero);
+      };
+
+      zone.appendChild(div);
+    });
+
+    zone.classList.remove("hidden");
+    setStatus("Choix exemplaire", "Sélectionne un exemplaire.");
+
+  } catch (error) {
+    setStatus("Erreur", error.message);
+  }
+}
+    async function toggleScannerJeu() {
+  const zone = document.getElementById("scannerJeuZone");
+  const btn = document.getElementById("btnCameraJeu");
+
+  if (scannerJeuActif) {
+    await stopScannerJeu();
+    zone.classList.add("hidden");
+    btn.textContent = "Scanner caméra";
+    return;
+  }
+
+  zone.classList.remove("hidden");
+  btn.textContent = "Arrêter caméra";
+
+  try {
+    scannerJeuInstance = new Html5Qrcode("readerJeu");
+
+    await scannerJeuInstance.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: 250 },
+      async (decodedText) => {
+        document.getElementById("eanJeu").value = decodedText;
+        await stopScannerJeu();
+        zone.classList.add("hidden");
+        btn.textContent = "Scanner caméra";
+        await verifierJeu();
+      }
+    );
+
+    scannerJeuActif = true;
+
+  } catch (error) {
+    zone.classList.add("hidden");
+    btn.textContent = "Scanner caméra";
+    setStatus("Caméra indisponible", error.message || "Impossible de lancer la caméra.");
+  }
+}
+
+async function stopScannerJeu() {
+  if (scannerJeuInstance && scannerJeuActif) {
+    await scannerJeuInstance.stop();
+    await scannerJeuInstance.clear();
+  }
+  scannerJeuActif = false;
+  scannerJeuInstance = null;
 }
   </script>
 </body>
