@@ -32,7 +32,7 @@
     }
 
     .app {
-      max-width: 840px;
+      max-width: 760px;
       margin: 0 auto;
       min-height: 100vh;
       padding: 20px 16px 40px;
@@ -107,9 +107,9 @@
     }
 
     .btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
 
     .btn-primary {
       background: var(--primary);
@@ -139,6 +139,7 @@
       color: var(--muted);
       font-size: 14px;
       line-height: 1.5;
+      margin-top: 14px;
     }
 
     .status-box strong {
@@ -149,89 +150,12 @@
       display: none !important;
     }
 
-    .fiche {
+    .view {
       display: none;
     }
 
-    .fiche.visible {
+    .view.active {
       display: block;
-    }
-
-    .fiche-header {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .name {
-      font-size: 24px;
-      font-weight: 700;
-    }
-
-    .badge {
-      display: inline-block;
-      width: fit-content;
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 14px;
-      font-weight: 700;
-      color: white;
-    }
-
-    .badge-ok {
-      background: var(--success);
-    }
-
-    .badge-ko {
-      background: var(--danger);
-    }
-
-    .motif {
-      margin-top: 10px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #991b1b;
-      font-size: 14px;
-      line-height: 1.4;
-    }
-
-    .infos {
-      display: grid;
-      gap: 12px;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      margin-top: 8px;
-    }
-
-    .info-item {
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: #fcfcfd;
-    }
-
-    .info-label {
-      font-size: 12px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 6px;
-    }
-
-    .info-value {
-      font-size: 16px;
-      font-weight: 700;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-
-    .actions {
-      margin-top: 18px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
     }
 
     .results {
@@ -263,14 +187,80 @@
       color: var(--muted);
     }
 
-    .section-title {
-      margin: 0 0 12px;
-      font-size: 22px;
+    .name {
+      font-size: 24px;
       font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      width: fit-content;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 14px;
+    }
+
+    .badge-ok {
+      background: var(--success);
+    }
+
+    .badge-ko {
+      background: var(--danger);
+    }
+
+    .motif {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .infos {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      margin-top: 16px;
+    }
+
+    .info-item {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fcfcfd;
+    }
+
+    .info-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+
+    .info-value {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .actions {
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .selected-box {
-      margin-top: 12px;
+      margin-top: 14px;
       padding: 14px;
       border-radius: 14px;
       background: #eff6ff;
@@ -279,7 +269,13 @@
 
     .selected-box strong {
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 22px;
+      font-weight: 700;
     }
 
     @media (max-width: 700px) {
@@ -301,128 +297,216 @@
   <div class="app">
     <header class="header">
       <h1 class="title">Gestion des emprunts</h1>
-      <p class="subtitle">
-        Recherche un adhérent, puis choisis un jeu à emprunter.
+      <p class="subtitle" id="headerSubtitle">
+        Recherche un adhérent pour commencer.
       </p>
     </header>
 
-    <section class="card">
-      <label for="adherentInput" class="label">Adhérent</label>
-      <div class="input-row">
-        <input
-          id="adherentInput"
-          class="text-input"
-          type="text"
-          placeholder="Scanne un identifiant ou saisis nom / prénom"
-          onkeydown="if(event.key === 'Enter') rechercherAdherentUnique()"
-        />
-<button id="btnRechercheAdherent" class="btn btn-primary" onclick="rechercherAdherentUnique()">
-  Rechercher
-</button>
-      </div>
+    <!-- VUE 1 : RECHERCHE ADHERENT -->
+    <section id="viewAdherent" class="view active">
+      <div class="card">
+        <h2 class="section-title">Rechercher un adhérent</h2>
 
-      <div id="adherentResults" class="results hidden"></div>
+        <label for="adherentInput" class="label">Adhérent</label>
+        <div class="input-row">
+          <input
+            id="adherentInput"
+            class="text-input"
+            type="text"
+            placeholder="Scanne un identifiant ou saisis nom / prénom"
+            onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherAdherentUnique();}"
+          />
+          <button id="btnRechercheAdherent" class="btn btn-primary" onclick="rechercherAdherentUnique()">
+            Rechercher
+          </button>
+        </div>
+
+        <div id="adherentResults" class="results hidden"></div>
+
+        <div id="statusAdherent" class="status-box">
+          <strong>Prêt.</strong><br>
+          En attente d’une recherche adhérent.
+        </div>
+      </div>
     </section>
 
-    <section class="card">
-      <div id="statusBox" class="status-box">
-        <strong>Prêt.</strong><br>
-        En attente d’une recherche adhérent.
-      </div>
-    </section>
+    <!-- VUE 2 : FICHE ADHERENT -->
+    <section id="viewFiche" class="view">
+      <div class="card">
+        <h2 class="section-title">Fiche adhérent</h2>
 
-    <section id="ficheAdherent" class="card fiche">
-      <div class="fiche-header">
         <div id="nomComplet" class="name"></div>
         <div id="badgeStatut" class="badge"></div>
-      </div>
 
-      <div id="motifBlocage" class="motif hidden"></div>
+        <div id="motifBlocage" class="motif hidden"></div>
 
-      <div class="infos">
-        <div class="info-item">
-          <div class="info-label">Emprunts en cours</div>
-          <div id="empruntsEnCours" class="info-value"></div>
+        <div class="infos">
+          <div class="info-item">
+            <div class="info-label">Emprunts en cours</div>
+            <div id="empruntsEnCours" class="info-value"></div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Statut emprunt</div>
+            <div id="statutEmprunt" class="info-value"></div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Jeux en cours</div>
+            <div id="jeuxEnCours" class="info-value"></div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Nombre de retards</div>
+            <div id="nbRetards" class="info-value"></div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Profil</div>
+            <div id="profil" class="info-value"></div>
+          </div>
         </div>
 
-        <div class="info-item">
-          <div class="info-label">Statut emprunt</div>
-          <div id="statutEmprunt" class="info-value"></div>
+        <div class="actions">
+          <button id="btnChoisirJeu" class="btn btn-success hidden" onclick="ouvrirVueJeu()">
+            Emprunter un jeu
+          </button>
+
+          <button class="btn btn-warning" onclick="retourRechercheAdherent()">
+            Changer d’adhérent
+          </button>
         </div>
 
-        <div class="info-item">
-          <div class="info-label">Jeux en cours</div>
-          <div id="jeuxEnCours" class="info-value"></div>
+        <div id="statusFiche" class="status-box">
+          <strong>Fiche chargée.</strong><br>
+          Vérifie les informations avant de continuer.
         </div>
-
-        <div class="info-item">
-          <div class="info-label">Nombre de retards</div>
-          <div id="nbRetards" class="info-value"></div>
-        </div>
-
-        <div class="info-item">
-          <div class="info-label">Profil</div>
-          <div id="profil" class="info-value"></div>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button id="btnChoisirJeu" class="btn btn-success hidden" onclick="ouvrirBlocJeu()">
-          Choisir un jeu
-        </button>
-
-        <button class="btn btn-danger" onclick="reinitialiserTout()">
-          Réinitialiser
-        </button>
       </div>
     </section>
 
-    <section id="blocJeu" class="card hidden">
-      <h2 class="section-title">Choix du jeu</h2>
+    <!-- VUE 3 : RECHERCHE JEU -->
+    <section id="viewJeu" class="view">
+      <div class="card">
+        <h2 class="section-title">Choisir un jeu</h2>
 
-      <label for="jeuInput" class="label">Jeu</label>
-      <div class="input-row">
-        <input
-          id="jeuInput"
-          class="text-input"
-          type="text"
-          placeholder="Scanne un code-barres ou saisis un nom de jeu"
-onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherJeuUnique();}"
+        <label for="jeuInput" class="label">Jeu</label>
+        <div class="input-row">
+          <input
+            id="jeuInput"
+            class="text-input"
+            type="text"
+            placeholder="Scanne un code-barres ou saisis un nom de jeu"
+            onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherJeuUnique();}"
           />
-        <button id="btnRechercheJeu" class="btn btn-primary" onclick="rechercherJeuUnique()">
-  Rechercher
-</button>
+          <button id="btnRechercheJeu" class="btn btn-primary" onclick="rechercherJeuUnique()">
+            Rechercher
+          </button>
+        </div>
+
+        <div id="jeuResults" class="results hidden"></div>
+
+        <div id="jeuSelection" class="selected-box hidden">
+          <strong id="jeuNomSelection"></strong>
+          <span id="jeuEtatSelection"></span>
+        </div>
+
+        <div id="exemplairesBloc" class="hidden">
+          <label class="label" style="margin-top:14px;">Exemplaires disponibles</label>
+          <div id="exemplairesZone" class="results"></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-warning" onclick="retourFicheAdherent()">
+            Retour à la fiche
+          </button>
+        </div>
+
+        <div id="statusJeu" class="status-box">
+          <strong>Prêt.</strong><br>
+          En attente d’une recherche jeu.
+        </div>
       </div>
-
-      <div id="jeuResults" class="results hidden"></div>
-
-      <div id="jeuSelection" class="selected-box hidden">
-        <strong id="jeuNomSelection"></strong>
-        <span id="jeuEtatSelection"></span>
-      </div>
-
-<div id="exemplairesBloc" class="hidden">
-  <label class="label" style="margin-top:14px;">Exemplaires disponibles</label>
-  <div id="exemplairesZone" class="results"></div>
-</div>    </section>
+    </section>
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxvASN1BbWvvwLn2zRg_t_1GgysJaeNk2jJhQMMXHitTdrea8Ub2a3Kq-7pZpBVTMRSLQ/exec";
+    const API_URL = "COLLE_ICI_TON_URL_WEB_APP";
 
     let adherentCourant = null;
     let jeuCourant = null;
     let exemplaireChoisi = null;
 
-    function setStatus(title, text) {
-      const box = document.getElementById("statusBox");
+    function setHeaderSubtitle(text) {
+      document.getElementById("headerSubtitle").textContent = text;
+    }
+
+    function showView(viewId) {
+      document.querySelectorAll(".view").forEach(view => {
+        view.classList.remove("active");
+      });
+      document.getElementById(viewId).classList.add("active");
+    }
+
+    function setStatus(boxId, title, text) {
+      const box = document.getElementById(boxId);
       box.innerHTML = "<strong>" + title + "</strong><br>" + text;
+    }
+
+    function retourRechercheAdherent() {
+      adherentCourant = null;
+      jeuCourant = null;
+      exemplaireChoisi = null;
+
+      document.getElementById("adherentResults").innerHTML = "";
+      document.getElementById("adherentResults").classList.add("hidden");
+      document.getElementById("adherentInput").value = "";
+
+      showView("viewAdherent");
+      setHeaderSubtitle("Recherche un adhérent pour commencer.");
+      setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
+      document.getElementById("adherentInput").focus();
+    }
+
+    function retourFicheAdherent() {
+      jeuCourant = null;
+      exemplaireChoisi = null;
+
+      document.getElementById("jeuInput").value = "";
+      document.getElementById("jeuResults").innerHTML = "";
+      document.getElementById("jeuResults").classList.add("hidden");
+      document.getElementById("jeuSelection").classList.add("hidden");
+      document.getElementById("jeuNomSelection").textContent = "";
+      document.getElementById("jeuEtatSelection").textContent = "";
+      document.getElementById("exemplairesZone").innerHTML = "";
+      document.getElementById("exemplairesBloc").classList.add("hidden");
+
+      showView("viewFiche");
+      setHeaderSubtitle("Consulte la fiche de l’adhérent.");
+      setStatus("statusFiche", "Fiche chargée.", "Vérifie les informations avant de continuer.");
+    }
+
+    function ouvrirVueJeu() {
+      jeuCourant = null;
+      exemplaireChoisi = null;
+
+      document.getElementById("jeuInput").value = "";
+      document.getElementById("jeuResults").innerHTML = "";
+      document.getElementById("jeuResults").classList.add("hidden");
+      document.getElementById("jeuSelection").classList.add("hidden");
+      document.getElementById("jeuNomSelection").textContent = "";
+      document.getElementById("jeuEtatSelection").textContent = "";
+      document.getElementById("exemplairesZone").innerHTML = "";
+      document.getElementById("exemplairesBloc").classList.add("hidden");
+
+      showView("viewJeu");
+      setHeaderSubtitle("Recherche un jeu à emprunter.");
+      setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
+      document.getElementById("jeuInput").focus();
     }
 
     function afficherFicheAdherent(data) {
       adherentCourant = data;
 
-      document.getElementById("ficheAdherent").classList.add("visible");
       document.getElementById("nomComplet").textContent = data.nom_complet || "";
 
       const badge = document.getElementById("badgeStatut");
@@ -451,255 +535,192 @@ onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherJeuUnique
         btnChoisirJeu.classList.remove("hidden");
       } else {
         btnChoisirJeu.classList.add("hidden");
-        document.getElementById("blocJeu").classList.add("hidden");
       }
-    }
 
-    function reinitialiserTout() {
-      adherentCourant = null;
-      jeuCourant = null;
-      exemplaireChoisi = null;
+      showView("viewFiche");
+      setHeaderSubtitle("Consulte la fiche de l’adhérent.");
 
-      document.getElementById("adherentInput").value = "";
-      document.getElementById("jeuInput").value = "";
-
-      document.getElementById("adherentResults").innerHTML = "";
-      document.getElementById("adherentResults").classList.add("hidden");
-
-      document.getElementById("jeuResults").innerHTML = "";
-      document.getElementById("jeuResults").classList.add("hidden");
-
-      document.getElementById("ficheAdherent").classList.remove("visible");
-      document.getElementById("blocJeu").classList.add("hidden");
-
-      document.getElementById("jeuSelection").classList.add("hidden");
-      document.getElementById("jeuNomSelection").textContent = "";
-      document.getElementById("jeuEtatSelection").textContent = "";
-
-      document.getElementById("exemplairesZone").innerHTML = "";
-document.getElementById("exemplairesBloc").classList.add("hidden");
-
-      setStatus("Prêt.", "En attente d’une recherche adhérent.");
-      document.getElementById("adherentInput").focus();
+      if (peutEmprunter) {
+        setStatus("statusFiche", "Adhérent autorisé", "Tu peux passer au choix du jeu.");
+      } else {
+        setStatus("statusFiche", "Adhérent bloqué", data.motif_blocage || "Emprunt impossible.");
+      }
     }
 
     async function rechercherAdherentUnique() {
-  if (window.rechercheAdherentEnCours) return;
-  window.rechercheAdherentEnCours = true;
+      if (window.rechercheAdherentEnCours) return;
+      window.rechercheAdherentEnCours = true;
 
-  const input = document.getElementById("adherentInput").value.trim();
-  const resultsBox = document.getElementById("adherentResults");
-  const btn = document.getElementById("btnRechercheAdherent");
+      const input = document.getElementById("adherentInput").value.trim();
+      const resultsBox = document.getElementById("adherentResults");
+      const btn = document.getElementById("btnRechercheAdherent");
 
-  btn.disabled = true;
-  btn.style.opacity = "0.6";
-  btn.textContent = "Recherche...";
+      btn.disabled = true;
+      btn.textContent = "Recherche...";
 
-  resultsBox.innerHTML = "";
-  resultsBox.classList.add("hidden");
+      resultsBox.innerHTML = "";
+      resultsBox.classList.add("hidden");
 
-  document.getElementById("ficheAdherent").classList.remove("visible");
-  document.getElementById("blocJeu").classList.add("hidden");
-
-  if (!input) {
-    setStatus("Recherche vide", "Saisis un identifiant, un nom ou un prénom.");
-    btn.disabled = false;
-    btn.style.opacity = "1";
-    btn.textContent = "Rechercher";
-    window.rechercheAdherentEnCours = false;
-    return;
-  }
-
-  setStatus("Recherche adhérent", "Vérification en cours...");
-
-  try {
-    const directUrl = API_URL
-      + "?action=getAdherentByCode"
-      + "&code=" + encodeURIComponent(input);
-
-    const directResponse = await fetch(directUrl);
-    const directData = await directResponse.json();
-
-    if (directData.found) {
-      afficherFicheAdherent(directData);
-
-      if (String(directData.peut_emprunter || "").toLowerCase() === "oui") {
-        setStatus("Adhérent autorisé", "Tu peux choisir un jeu.");
-      } else {
-        setStatus("Adhérent bloqué", directData.motif_blocage || "Emprunt impossible.");
+      if (!input) {
+        setStatus("statusAdherent", "Recherche vide", "Saisis un identifiant, un nom ou un prénom.");
+        btn.disabled = false;
+        btn.textContent = "Rechercher";
+        window.rechercheAdherentEnCours = false;
+        return;
       }
-      return;
-    }
 
-    const searchUrl = API_URL
-      + "?action=searchAdherents"
-      + "&query=" + encodeURIComponent(input);
+      setStatus("statusAdherent", "Recherche adhérent", "Vérification en cours...");
 
-    const searchResponse = await fetch(searchUrl);
-    const searchData = await searchResponse.json();
+      try {
+        const directUrl = API_URL
+          + "?action=getAdherentByCode"
+          + "&code=" + encodeURIComponent(input);
 
-    if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
-      setStatus("Aucun résultat", "Aucun adhérent ne correspond à cette recherche.");
-      return;
-    }
+        const directResponse = await fetch(directUrl);
+        const directData = await directResponse.json();
 
-    const adherentsUniques = [];
-    const idsVus = new Set();
-
-    searchData.results.forEach(item => {
-      if (!idsVus.has(item.id_adherent)) {
-        idsVus.add(item.id_adherent);
-        adherentsUniques.push(item);
-      }
-    });
-
-    adherentsUniques.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "result-item";
-      div.innerHTML = `
-        <div class="result-main">${item.nom_complet}</div>
-        <div class="result-sub">ID : ${item.id_adherent} · Profil : ${item.profil}</div>
-      `;
-      div.onclick = () => {
-        document.getElementById("adherentInput").value = item.id_adherent;
-        afficherFicheAdherent(item);
-
-        if (String(item.peut_emprunter || "").toLowerCase() === "oui") {
-          setStatus("Adhérent sélectionné", "Tu peux choisir un jeu.");
-        } else {
-          setStatus("Adhérent bloqué", item.motif_blocage || "Emprunt impossible.");
+        if (directData.found) {
+          afficherFicheAdherent(directData);
+          return;
         }
 
-        resultsBox.classList.add("hidden");
-      };
-      resultsBox.appendChild(div);
-    });
+        const searchUrl = API_URL
+          + "?action=searchAdherents"
+          + "&query=" + encodeURIComponent(input);
 
-    resultsBox.classList.remove("hidden");
-    setStatus("Résultats trouvés", "Choisis un adhérent dans la liste.");
+        const searchResponse = await fetch(searchUrl);
+        const searchData = await searchResponse.json();
 
-  } catch (error) {
-    setStatus("Erreur", error.message);
-  } finally {
-    btn.disabled = false;
-    btn.style.opacity = "1";
-    btn.textContent = "Rechercher";
-    window.rechercheAdherentEnCours = false;
-  }
-}
+        if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
+          setStatus("statusAdherent", "Aucun résultat", "Aucun adhérent ne correspond à cette recherche.");
+          return;
+        }
 
-    function ouvrirBlocJeu() {
-      jeuCourant = null;
+        const adherentsUniques = [];
+        const idsVus = new Set();
+
+        searchData.results.forEach(item => {
+          if (!idsVus.has(item.id_adherent)) {
+            idsVus.add(item.id_adherent);
+            adherentsUniques.push(item);
+          }
+        });
+
+        adherentsUniques.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "result-item";
+          div.innerHTML = `
+            <div class="result-main">${item.nom_complet}</div>
+            <div class="result-sub">ID : ${item.id_adherent} · Profil : ${item.profil}</div>
+          `;
+          div.onclick = () => {
+            document.getElementById("adherentInput").value = item.id_adherent;
+            afficherFicheAdherent(item);
+            resultsBox.classList.add("hidden");
+          };
+          resultsBox.appendChild(div);
+        });
+
+        resultsBox.classList.remove("hidden");
+        setStatus("statusAdherent", "Résultats trouvés", "Choisis un adhérent dans la liste.");
+
+      } catch (error) {
+        setStatus("statusAdherent", "Erreur", error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Rechercher";
+        window.rechercheAdherentEnCours = false;
+      }
+    }
+
+    async function rechercherJeuUnique() {
+      if (window.rechercheJeuEnCours) return;
+      window.rechercheJeuEnCours = true;
+
+      const input = document.getElementById("jeuInput").value.trim();
+      const resultsBox = document.getElementById("jeuResults");
+      const btn = document.getElementById("btnRechercheJeu");
+
+      btn.disabled = true;
+      btn.textContent = "Recherche...";
+
+      resultsBox.innerHTML = "";
+      resultsBox.classList.add("hidden");
+      document.getElementById("jeuSelection").classList.add("hidden");
+      document.getElementById("exemplairesZone").innerHTML = "";
+      document.getElementById("exemplairesBloc").classList.add("hidden");
       exemplaireChoisi = null;
 
-      document.getElementById("blocJeu").classList.remove("hidden");
-      document.getElementById("jeuInput").value = "";
-      document.getElementById("jeuResults").innerHTML = "";
-      document.getElementById("jeuResults").classList.add("hidden");
-      document.getElementById("jeuSelection").classList.add("hidden");
-      document.getElementById("jeuNomSelection").textContent = "";
-      document.getElementById("jeuEtatSelection").textContent = "";
-      document.getElementById("exemplairesZone").innerHTML = "";
-document.getElementById("exemplairesBloc").classList.add("hidden");
-      document.getElementById("jeuInput").focus();
-      setStatus("Choix du jeu", "Scanne un code-barres ou saisis un nom de jeu.");
-    }
-
-   async function rechercherJeuUnique() {
-  if (window.rechercheJeuEnCours) return;
-  window.rechercheJeuEnCours = true;
-
-  const input = document.getElementById("jeuInput").value.trim();
-  const resultsBox = document.getElementById("jeuResults");
-  const btn = document.getElementById("btnRechercheJeu");
-
-  btn.disabled = true;
-  btn.style.opacity = "0.6";
-  btn.textContent = "Recherche...";
-
-  resultsBox.innerHTML = "";
-  resultsBox.classList.add("hidden");
-
-  document.getElementById("jeuSelection").classList.add("hidden");
-  document.getElementById("exemplairesZone").innerHTML = "";
-  document.getElementById("exemplairesBloc")?.classList.add("hidden");
-
-  exemplaireChoisi = null;
-
-  if (!input) {
-    setStatus("Recherche vide", "Saisis un code-barres ou un nom de jeu.");
-    btn.disabled = false;
-    btn.style.opacity = "1";
-    btn.textContent = "Rechercher";
-    window.rechercheJeuEnCours = false;
-    return;
-  }
-
-  setStatus("Recherche jeu", "Vérification en cours...");
-
-  try {
-    const directUrl = API_URL
-      + "?action=getJeuByEAN"
-      + "&ean=" + encodeURIComponent(input);
-
-    const directResponse = await fetch(directUrl);
-    const directData = await directResponse.json();
-
-    if (directData.found) {
-      await selectionnerJeu(directData);
-      return;
-    }
-
-    const searchUrl = API_URL
-      + "?action=searchJeux"
-      + "&query=" + encodeURIComponent(input);
-
-    const searchResponse = await fetch(searchUrl);
-    const searchData = await searchResponse.json();
-
-    if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
-      setStatus("Aucun résultat", "Aucun jeu trouvé.");
-      return;
-    }
-
-    const jeuxUniques = [];
-    const idsVus = new Set();
-
-    searchData.results.forEach(item => {
-      if (!idsVus.has(item.id_jeu)) {
-        idsVus.add(item.id_jeu);
-        jeuxUniques.push(item);
+      if (!input) {
+        setStatus("statusJeu", "Recherche vide", "Saisis un code-barres ou un nom de jeu.");
+        btn.disabled = false;
+        btn.textContent = "Rechercher";
+        window.rechercheJeuEnCours = false;
+        return;
       }
-    });
 
-    jeuxUniques.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "result-item";
-      div.innerHTML = `
-        <div class="result-main">${item.nom_jeu}</div>
-        <div class="result-sub">ID : ${item.id_jeu}</div>
-      `;
+      setStatus("statusJeu", "Recherche jeu", "Vérification en cours...");
 
-      div.onclick = async () => {
-        await selectionnerJeu(item);
-        resultsBox.classList.add("hidden");
-      };
+      try {
+        const directUrl = API_URL
+          + "?action=getJeuByEAN"
+          + "&ean=" + encodeURIComponent(input);
 
-      resultsBox.appendChild(div);
-    });
+        const directResponse = await fetch(directUrl);
+        const directData = await directResponse.json();
 
-    resultsBox.classList.remove("hidden");
-    setStatus("Résultats trouvés", "Choisis un jeu dans la liste.");
+        if (directData.found) {
+          await selectionnerJeu(directData);
+          return;
+        }
 
-  } catch (error) {
-    setStatus("Erreur", error.message);
-  } finally {
-    btn.disabled = false;
-    btn.style.opacity = "1";
-    btn.textContent = "Rechercher";
-    window.rechercheJeuEnCours = false;
-  }
-}
+        const searchUrl = API_URL
+          + "?action=searchJeux"
+          + "&query=" + encodeURIComponent(input);
+
+        const searchResponse = await fetch(searchUrl);
+        const searchData = await searchResponse.json();
+
+        if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
+          setStatus("statusJeu", "Aucun résultat", "Aucun jeu trouvé.");
+          return;
+        }
+
+        const jeuxUniques = [];
+        const idsVus = new Set();
+
+        searchData.results.forEach(item => {
+          if (!idsVus.has(item.id_jeu)) {
+            idsVus.add(item.id_jeu);
+            jeuxUniques.push(item);
+          }
+        });
+
+        jeuxUniques.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "result-item";
+          div.innerHTML = `
+            <div class="result-main">${item.nom_jeu}</div>
+            <div class="result-sub">ID : ${item.id_jeu}</div>
+          `;
+          div.onclick = async () => {
+            await selectionnerJeu(item);
+            resultsBox.classList.add("hidden");
+          };
+          resultsBox.appendChild(div);
+        });
+
+        resultsBox.classList.remove("hidden");
+        setStatus("statusJeu", "Résultats trouvés", "Choisis un jeu dans la liste.");
+
+      } catch (error) {
+        setStatus("statusJeu", "Erreur", error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Rechercher";
+        window.rechercheJeuEnCours = false;
+      }
+    }
 
     async function selectionnerJeu(item) {
       jeuCourant = item;
@@ -710,9 +731,9 @@ document.getElementById("exemplairesBloc").classList.add("hidden");
 
       if (!item.empruntable && !item.emprunt_autorise) {
         document.getElementById("jeuEtatSelection").textContent = "Jeu désactivé.";
-        setStatus("Jeu non empruntable", "Ce jeu est désactivé.");
+        setStatus("statusJeu", "Jeu non empruntable", "Ce jeu est désactivé.");
         document.getElementById("exemplairesZone").innerHTML = "";
-document.getElementById("exemplairesBloc").classList.add("hidden");
+        document.getElementById("exemplairesBloc").classList.add("hidden");
         return;
       }
 
@@ -721,7 +742,7 @@ document.getElementById("exemplairesBloc").classList.add("hidden");
     }
 
     async function chargerExemplaires(idJeu) {
-      setStatus("Recherche exemplaires", "Chargement...");
+      setStatus("statusJeu", "Recherche exemplaires", "Chargement...");
 
       try {
         const url = API_URL
@@ -736,21 +757,18 @@ document.getElementById("exemplairesBloc").classList.add("hidden");
         zone.innerHTML = "";
 
         if (!data.exemplaires_disponibles || data.exemplaires_disponibles.length === 0) {
-          setStatus("Aucun exemplaire", "Tous les exemplaires sont actuellement empruntés.");
-bloc.classList.add("hidden");
+          setStatus("statusJeu", "Aucun exemplaire", "Tous les exemplaires sont actuellement empruntés.");
+          bloc.classList.add("hidden");
           return;
         }
 
         if (data.exemplaires_disponibles.length === 1) {
-  const ex = data.exemplaires_disponibles[0];
-  exemplaireChoisi = ex.id_exemplaire;
-
-  // 🚫 On n'affiche rien
-  bloc.classList.add("hidden");
-
-  setStatus("Exemplaire sélectionné", "Un seul exemplaire disponible → sélection automatique.");
-  return;
-}
+          const ex = data.exemplaires_disponibles[0];
+          exemplaireChoisi = ex.id_exemplaire;
+          bloc.classList.add("hidden");
+          setStatus("statusJeu", "Exemplaire sélectionné", "Un seul exemplaire disponible → sélection automatique.");
+          return;
+        }
 
         data.exemplaires_disponibles.forEach(ex => {
           const div = document.createElement("div");
@@ -759,19 +777,18 @@ bloc.classList.add("hidden");
             <div class="result-main">Exemplaire n°${ex.numero}</div>
             <div class="result-sub">Cliquer pour sélectionner</div>
           `;
-
           div.onclick = () => {
             exemplaireChoisi = ex.id_exemplaire;
-            setStatus("Exemplaire sélectionné", "Exemplaire n°" + ex.numero + " sélectionné.");
+            setStatus("statusJeu", "Exemplaire sélectionné", "Exemplaire n°" + ex.numero + " sélectionné.");
           };
-
           zone.appendChild(div);
         });
 
-bloc.classList.remove("hidden");        setStatus("Choix exemplaire", "Choisis un exemplaire disponible.");
+        bloc.classList.remove("hidden");
+        setStatus("statusJeu", "Choix exemplaire", "Choisis un exemplaire disponible.");
 
       } catch (error) {
-        setStatus("Erreur", error.message);
+        setStatus("statusJeu", "Erreur", error.message);
       }
     }
   </script>
