@@ -800,6 +800,32 @@
         setStatus("statusJeu", "Erreur", error.message);
       }
     }
+function reinitialiserTout() {
+  adherentCourant = null;
+  jeuCourant = null;
+  exemplaireChoisi = null;
+
+  document.getElementById("adherentInput").value = "";
+  document.getElementById("jeuInput").value = "";
+
+  document.getElementById("adherentResults").innerHTML = "";
+  document.getElementById("adherentResults").classList.add("hidden");
+
+  document.getElementById("jeuResults").innerHTML = "";
+  document.getElementById("jeuResults").classList.add("hidden");
+
+  document.getElementById("jeuSelection").classList.add("hidden");
+  document.getElementById("jeuNomSelection").textContent = "";
+  document.getElementById("jeuEtatSelection").textContent = "";
+
+  document.getElementById("exemplairesZone").innerHTML = "";
+  document.getElementById("exemplairesBloc").classList.add("hidden");
+
+  showView("viewAdherent");
+  setHeaderSubtitle("Recherche un adhérent pour commencer.");
+  setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
+}
+    
     async function validerEmprunt() {
   const btn = document.getElementById("btnValiderEmprunt");
 
