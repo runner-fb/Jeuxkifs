@@ -431,6 +431,31 @@
         </div>
       </div>
     </section>
+    <section id="viewSucces" class="view">
+  <div class="card">
+    <h2 class="section-title">Emprunt enregistré</h2>
+
+    <div class="selected-box">
+      <strong id="successTitre">Emprunt enregistré</strong>
+      <span id="successDetail"></span>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-success" onclick="emprunterAutreJeu()">
+        Emprunter un autre jeu
+      </button>
+
+      <button class="btn btn-primary" onclick="reinitialiserTout()">
+        Nouvel adhérent
+      </button>
+    </div>
+
+    <div id="statusSucces" class="status-box">
+      <strong>Succès.</strong><br>
+      L’emprunt a bien été enregistré.
+    </div>
+  </div>
+</section>
   </div>
 
   <script>
@@ -820,7 +845,8 @@ function reinitialiserTout() {
 
   document.getElementById("exemplairesZone").innerHTML = "";
   document.getElementById("exemplairesBloc").classList.add("hidden");
-
+  document.getElementById("btnValiderEmprunt").classList.add("hidden");
+  
   showView("viewAdherent");
   setHeaderSubtitle("Recherche un adhérent pour commencer.");
   setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
@@ -861,12 +887,17 @@ const data = await response.json();
       return;
     }
 
-    setStatus("statusJeu", "Emprunt enregistré", "L’emprunt a bien été créé.");
-
-    // remise à zéro complète après succès
     const nomAdherent = adherentCourant.nom_complet || "";
-    reinitialiserTout();
-    setStatus("statusAdherent", "Succès", "Emprunt enregistré pour " + nomAdherent + ".");
+const nomJeu = jeuCourant?.nom_jeu || "";
+const idEx = exemplaireChoisi || "";
+
+document.getElementById("successTitre").textContent = "Emprunt enregistré";
+document.getElementById("successDetail").textContent =
+  nomAdherent + " a emprunté " + nomJeu + " (" + idEx + ").";
+
+showView("viewSucces");
+setHeaderSubtitle("Emprunt enregistré.");
+setStatus("statusSucces", "Succès.", "Choisis la suite.");
 
   } catch (error) {
     setStatus("statusJeu", "Erreur", error.message);
@@ -874,6 +905,25 @@ const data = await response.json();
     btn.disabled = false;
     btn.textContent = "Valider l’emprunt";
   }
+}
+    function emprunterAutreJeu() {
+  jeuCourant = null;
+  exemplaireChoisi = null;
+
+  document.getElementById("jeuInput").value = "";
+  document.getElementById("jeuResults").innerHTML = "";
+  document.getElementById("jeuResults").classList.add("hidden");
+  document.getElementById("jeuSelection").classList.add("hidden");
+  document.getElementById("jeuNomSelection").textContent = "";
+  document.getElementById("jeuEtatSelection").textContent = "";
+  document.getElementById("exemplairesZone").innerHTML = "";
+  document.getElementById("exemplairesBloc").classList.add("hidden");
+  document.getElementById("btnValiderEmprunt").classList.add("hidden");
+
+  showView("viewJeu");
+  setHeaderSubtitle("Recherche un jeu à emprunter.");
+  setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
+  document.getElementById("jeuInput").focus();
 }
   </script>
 </body>
