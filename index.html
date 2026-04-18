@@ -742,20 +742,15 @@ bloc.classList.add("hidden");
         }
 
         if (data.exemplaires_disponibles.length === 1) {
-          const ex = data.exemplaires_disponibles[0];
-          exemplaireChoisi = ex.id_exemplaire;
+  const ex = data.exemplaires_disponibles[0];
+  exemplaireChoisi = ex.id_exemplaire;
 
-          const div = document.createElement("div");
-          div.className = "result-item";
-          div.innerHTML = `
-            <div class="result-main">Exemplaire n°${ex.numero}</div>
-            <div class="result-sub">Sélection automatique</div>
-          `;
-          zone.appendChild(div);
-bloc.classList.remove("hidden");
-          setStatus("Exemplaire trouvé", "Exemplaire sélectionné automatiquement.");
-          return;
-        }
+  // 🚫 On n'affiche rien
+  bloc.classList.add("hidden");
+
+  setStatus("Exemplaire sélectionné", "Un seul exemplaire disponible → sélection automatique.");
+  return;
+}
 
         data.exemplaires_disponibles.forEach(ex => {
           const div = document.createElement("div");
