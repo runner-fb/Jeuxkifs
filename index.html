@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JeKiffe - Emprunts</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -21,7 +20,9 @@
       --radius: 18px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -72,13 +73,9 @@
 
     .input-row {
       display: grid;
-      grid-template-columns: 1fr auto auto;
+      grid-template-columns: 1fr auto;
       gap: 10px;
       align-items: center;
-    }
-
-    .input-row.two {
-      grid-template-columns: 1fr auto;
     }
 
     .text-input {
@@ -109,11 +106,25 @@
       transform: scale(0.98);
     }
 
-    .btn-primary { background: var(--primary); }
-    .btn-primary:hover { background: var(--primary-dark); }
-    .btn-success { background: var(--success); }
-    .btn-danger { background: var(--danger); }
-    .btn-warning { background: var(--warning); }
+    .btn-primary {
+      background: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-success {
+      background: var(--success);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+    }
+
+    .btn-warning {
+      background: var(--warning);
+    }
 
     .status-box {
       border-radius: 14px;
@@ -127,6 +138,10 @@
 
     .status-box strong {
       color: var(--text);
+    }
+
+    .hidden {
+      display: none !important;
     }
 
     .fiche {
@@ -159,8 +174,13 @@
       color: white;
     }
 
-    .badge-ok { background: var(--success); }
-    .badge-ko { background: var(--danger); }
+    .badge-ok {
+      background: var(--success);
+    }
+
+    .badge-ko {
+      background: var(--danger);
+    }
 
     .motif {
       margin-top: 10px;
@@ -209,24 +229,6 @@
       flex-wrap: wrap;
     }
 
-    .hidden {
-      display: none !important;
-    }
-#reader, #readerJeu {
-  width: 100%;
-  max-width: 520px;
-  margin-top: 12px;
-  border: 3px solid #2563eb;
-  border-radius: 16px;
-  overflow: hidden;
-  background: #000;
-}
-
-#reader video, #readerJeu video {
-  width: 100% !important;
-  height: auto !important;
-  object-fit: cover;
-}
     .results {
       margin-top: 12px;
       display: grid;
@@ -256,22 +258,27 @@
       color: var(--muted);
     }
 
-    #scannerZone {
-      margin-top: 14px;
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 22px;
+      font-weight: 700;
     }
 
-    #reader {
-      width: 100%;
-      max-width: 420px;
+    .selected-box {
       margin-top: 12px;
+      padding: 14px;
+      border-radius: 14px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+    }
+
+    .selected-box strong {
+      display: block;
+      margin-bottom: 4px;
     }
 
     @media (max-width: 700px) {
       .input-row {
-        grid-template-columns: 1fr;
-      }
-
-      .input-row.two {
         grid-template-columns: 1fr;
       }
 
@@ -290,53 +297,32 @@
     <header class="header">
       <h1 class="title">Gestion des emprunts</h1>
       <p class="subtitle">
-        Scanne le code adhérent, utilise la caméra, ou cherche par nom / prénom.
+        Recherche un adhérent, puis choisis un jeu à emprunter.
       </p>
     </header>
 
     <section class="card">
-      <label for="codeAdherent" class="label">Code adhérent</label>
+      <label for="adherentInput" class="label">Adhérent</label>
       <div class="input-row">
         <input
-          id="codeAdherent"
+          id="adherentInput"
           class="text-input"
           type="text"
-          placeholder="Scanne ou saisis le code adhérent"
+          placeholder="Scanne un identifiant ou saisis nom / prénom"
+          onkeydown="if(event.key === 'Enter') rechercherAdherentUnique()"
         />
-        <button class="btn btn-primary" onclick="verifierAdherent()">
-          Vérifier
-        </button>
-        <button id="btnCamera" class="btn btn-warning" onclick="toggleScanner()">
-          Scanner caméra
-        </button>
-      </div>
-
-      <div id="scannerZone" class="hidden">
-        <div id="reader"></div>
-      </div>
-    </section>
-
-    <section class="card">
-      <label for="searchAdherent" class="label">Recherche nom / prénom</label>
-      <div class="input-row two">
-        <input
-          id="searchAdherent"
-          class="text-input"
-          type="text"
-          placeholder="Exemple : marie, gazé, marie gazé..."
-        />
-        <button class="btn btn-primary" onclick="rechercherAdherents()">
+        <button class="btn btn-primary" onclick="rechercherAdherentUnique()">
           Rechercher
         </button>
       </div>
 
-      <div id="searchResults" class="results hidden"></div>
+      <div id="adherentResults" class="results hidden"></div>
     </section>
 
     <section class="card">
       <div id="statusBox" class="status-box">
         <strong>Prêt.</strong><br>
-        En attente d’un scan ou d’une recherche adhérent.
+        En attente d’une recherche adhérent.
       </div>
     </section>
 
@@ -376,79 +362,57 @@
       </div>
 
       <div class="actions">
-        <button id="btnScannerJeu" class="btn btn-success hidden" onclick="scannerJeu()">
-          Scanner un jeu
+        <button id="btnChoisirJeu" class="btn btn-success hidden" onclick="ouvrirBlocJeu()">
+          Choisir un jeu
         </button>
 
-        <button class="btn btn-danger" onclick="reinitialiserFiche()">
+        <button class="btn btn-danger" onclick="reinitialiserTout()">
           Réinitialiser
         </button>
       </div>
     </section>
 
     <section id="blocJeu" class="card hidden">
-  <label class="label">Scan jeu (code-barres)</label>
+      <h2 class="section-title">Choix du jeu</h2>
 
-      <label class="label" style="margin-top:12px;">Recherche nom de jeu</label>
+      <label for="jeuInput" class="label">Jeu</label>
+      <div class="input-row">
+        <input
+          id="jeuInput"
+          class="text-input"
+          type="text"
+          placeholder="Scanne un code-barres ou saisis un nom de jeu"
+          onkeydown="if(event.key === 'Enter') rechercherJeuUnique()"
+        />
+        <button class="btn btn-primary" onclick="rechercherJeuUnique()">
+          Rechercher
+        </button>
+      </div>
 
-<div class="input-row two">
-  <input
-    id="searchJeu"
-    class="text-input"
-    type="text"
-    placeholder="Exemple : catan, skull, azul..."
-  />
-  <button class="btn btn-primary" onclick="rechercherJeux()">
-    Rechercher
-  </button>
-</div>
+      <div id="jeuResults" class="results hidden"></div>
 
-<div id="searchJeuxResults" class="results hidden"></div>
+      <div id="jeuSelection" class="selected-box hidden">
+        <strong id="jeuNomSelection"></strong>
+        <span id="jeuEtatSelection"></span>
+      </div>
 
-  <div class="input-row">
-    <input
-      id="eanJeu"
-      class="text-input"
-      type="text"
-      placeholder="Scanne ou saisis le code-barres"
-    />
-    <button class="btn btn-primary" onclick="verifierJeu()">
-      Vérifier
-    </button>
-    <button id="btnCameraJeu" class="btn btn-warning" onclick="toggleScannerJeu()">
-      Scanner caméra
-    </button>
-  </div>
-
-  <div id="scannerJeuZone" class="hidden">
-    <div id="readerJeu"></div>
-  </div>
-
-  <div id="jeuResult" class="status-box" style="margin-top:12px;">
-    En attente d’un scan jeu.
-  </div>
-
-  <div id="exemplairesZone" class="results hidden"></div>
-</section>
+      <div id="exemplairesZone" class="results hidden"></div>
+    </section>
   </div>
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxvASN1BbWvvwLn2zRg_t_1GgysJaeNk2jJhQMMXHitTdrea8Ub2a3Kq-7pZpBVTMRSLQ/exec";
 
     let adherentCourant = null;
-    let scannerInstance = null;
-    let scannerActif = false;
-    let scannerJeuInstance = null;
-let scannerJeuActif = false;
-let jeuCourant = null;
-let exemplaireChoisi = null;
+    let jeuCourant = null;
+    let exemplaireChoisi = null;
 
     function setStatus(title, text) {
       const box = document.getElementById("statusBox");
       box.innerHTML = "<strong>" + title + "</strong><br>" + text;
     }
 
-    function afficherFiche(data) {
+    function afficherFicheAdherent(data) {
       adherentCourant = data;
 
       document.getElementById("ficheAdherent").classList.add("visible");
@@ -475,91 +439,92 @@ let exemplaireChoisi = null;
       document.getElementById("nbRetards").textContent = data.nb_retards ?? "";
       document.getElementById("profil").textContent = data.profil || "";
 
-      const btnScannerJeu = document.getElementById("btnScannerJeu");
+      const btnChoisirJeu = document.getElementById("btnChoisirJeu");
       if (peutEmprunter) {
-        btnScannerJeu.classList.remove("hidden");
+        btnChoisirJeu.classList.remove("hidden");
       } else {
-        btnScannerJeu.classList.add("hidden");
+        btnChoisirJeu.classList.add("hidden");
+        document.getElementById("blocJeu").classList.add("hidden");
       }
     }
 
-    function reinitialiserFiche() {
+    function reinitialiserTout() {
       adherentCourant = null;
+      jeuCourant = null;
+      exemplaireChoisi = null;
+
+      document.getElementById("adherentInput").value = "";
+      document.getElementById("jeuInput").value = "";
+
+      document.getElementById("adherentResults").innerHTML = "";
+      document.getElementById("adherentResults").classList.add("hidden");
+
+      document.getElementById("jeuResults").innerHTML = "";
+      document.getElementById("jeuResults").classList.add("hidden");
+
       document.getElementById("ficheAdherent").classList.remove("visible");
-      document.getElementById("codeAdherent").value = "";
-      document.getElementById("searchAdherent").value = "";
-      document.getElementById("searchResults").innerHTML = "";
-      document.getElementById("searchResults").classList.add("hidden");
-      setStatus("Prêt.", "En attente d’un scan ou d’une recherche adhérent.");
-      document.getElementById("codeAdherent").focus();
+      document.getElementById("blocJeu").classList.add("hidden");
+
+      document.getElementById("jeuSelection").classList.add("hidden");
+      document.getElementById("jeuNomSelection").textContent = "";
+      document.getElementById("jeuEtatSelection").textContent = "";
+
+      document.getElementById("exemplairesZone").innerHTML = "";
+      document.getElementById("exemplairesZone").classList.add("hidden");
+
+      setStatus("Prêt.", "En attente d’une recherche adhérent.");
+      document.getElementById("adherentInput").focus();
     }
 
-    async function verifierAdherent() {
-      const code = document.getElementById("codeAdherent").value.trim();
+    async function rechercherAdherentUnique() {
+      const input = document.getElementById("adherentInput").value.trim();
+      const resultsBox = document.getElementById("adherentResults");
 
-      if (!code) {
-        setStatus("Code manquant", "Saisis ou scanne un code adhérent.");
-        return;
-      }
-
-      setStatus("Recherche adhérent", "Vérification en cours...");
-      document.getElementById("ficheAdherent").classList.remove("visible");
-
-      try {
-        const url = API_URL
-          + "?action=getAdherentByCode"
-          + "&code=" + encodeURIComponent(code);
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (!data.found) {
-          setStatus("Adhérent introuvable", data.message || "Aucun résultat.");
-          return;
-        }
-
-        afficherFiche(data);
-
-        if (String(data.peut_emprunter || "").toLowerCase() === "oui") {
-          setStatus("Adhérent autorisé", "Tu peux passer au scan du jeu.");
-        } else {
-          setStatus("Adhérent bloqué", data.motif_blocage || "Emprunt impossible.");
-        }
-      } catch (error) {
-        setStatus("Erreur", error.message);
-      }
-    }
-
-    async function rechercherAdherents() {
-      const query = document.getElementById("searchAdherent").value.trim();
-      const resultsBox = document.getElementById("searchResults");
-
-      if (!query) {
-        setStatus("Recherche vide", "Saisis un nom ou un prénom.");
+      if (!input) {
+        setStatus("Recherche vide", "Saisis un identifiant, un nom ou un prénom.");
         resultsBox.innerHTML = "";
         resultsBox.classList.add("hidden");
         return;
       }
 
-      setStatus("Recherche adhérents", "Recherche en cours...");
+      setStatus("Recherche adhérent", "Vérification en cours...");
       resultsBox.innerHTML = "";
       resultsBox.classList.add("hidden");
+      document.getElementById("ficheAdherent").classList.remove("visible");
+      document.getElementById("blocJeu").classList.add("hidden");
 
       try {
-        const url = API_URL
+        const directUrl = API_URL
+          + "?action=getAdherentByCode"
+          + "&code=" + encodeURIComponent(input);
+
+        const directResponse = await fetch(directUrl);
+        const directData = await directResponse.json();
+
+        if (directData.found) {
+          afficherFicheAdherent(directData);
+
+          if (String(directData.peut_emprunter || "").toLowerCase() === "oui") {
+            setStatus("Adhérent autorisé", "Tu peux choisir un jeu.");
+          } else {
+            setStatus("Adhérent bloqué", directData.motif_blocage || "Emprunt impossible.");
+          }
+          return;
+        }
+
+        const searchUrl = API_URL
           + "?action=searchAdherents"
-          + "&query=" + encodeURIComponent(query);
+          + "&query=" + encodeURIComponent(input);
 
-        const response = await fetch(url);
-        const data = await response.json();
+        const searchResponse = await fetch(searchUrl);
+        const searchData = await searchResponse.json();
 
-        if (!data.ok || !Array.isArray(data.results) || data.results.length === 0) {
+        if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
           setStatus("Aucun résultat", "Aucun adhérent ne correspond à cette recherche.");
           return;
         }
 
-        resultsBox.innerHTML = "";
-        data.results.forEach(item => {
+        searchData.results.forEach(item => {
           const div = document.createElement("div");
           div.className = "result-item";
           div.innerHTML = `
@@ -567,11 +532,11 @@ let exemplaireChoisi = null;
             <div class="result-sub">ID : ${item.id_adherent} · Profil : ${item.profil}</div>
           `;
           div.onclick = () => {
-            document.getElementById("codeAdherent").value = item.id_adherent;
-            afficherFiche(item);
+            document.getElementById("adherentInput").value = item.id_adherent;
+            afficherFicheAdherent(item);
 
             if (String(item.peut_emprunter || "").toLowerCase() === "oui") {
-              setStatus("Adhérent sélectionné", "Tu peux passer au scan du jeu.");
+              setStatus("Adhérent sélectionné", "Tu peux choisir un jeu.");
             } else {
               setStatus("Adhérent bloqué", item.motif_blocage || "Emprunt impossible.");
             }
@@ -583,275 +548,175 @@ let exemplaireChoisi = null;
 
         resultsBox.classList.remove("hidden");
         setStatus("Résultats trouvés", "Choisis un adhérent dans la liste.");
+
       } catch (error) {
         setStatus("Erreur", error.message);
       }
     }
 
-    async function toggleScanner() {
-      const zone = document.getElementById("scannerZone");
-      const btn = document.getElementById("btnCamera");
+    function ouvrirBlocJeu() {
+      jeuCourant = null;
+      exemplaireChoisi = null;
 
-      if (scannerActif) {
-        await stopScanner();
-        zone.classList.add("hidden");
-        btn.textContent = "Scanner caméra";
-        setStatus("Scanner arrêté", "Tu peux reprendre une saisie manuelle.");
+      document.getElementById("blocJeu").classList.remove("hidden");
+      document.getElementById("jeuInput").value = "";
+      document.getElementById("jeuResults").innerHTML = "";
+      document.getElementById("jeuResults").classList.add("hidden");
+      document.getElementById("jeuSelection").classList.add("hidden");
+      document.getElementById("jeuNomSelection").textContent = "";
+      document.getElementById("jeuEtatSelection").textContent = "";
+      document.getElementById("exemplairesZone").innerHTML = "";
+      document.getElementById("exemplairesZone").classList.add("hidden");
+
+      document.getElementById("jeuInput").focus();
+      setStatus("Choix du jeu", "Scanne un code-barres ou saisis un nom de jeu.");
+    }
+
+    async function rechercherJeuUnique() {
+      const input = document.getElementById("jeuInput").value.trim();
+      const resultsBox = document.getElementById("jeuResults");
+
+      if (!input) {
+        setStatus("Recherche vide", "Saisis un code-barres ou un nom de jeu.");
+        resultsBox.innerHTML = "";
+        resultsBox.classList.add("hidden");
         return;
       }
 
-      zone.classList.remove("hidden");
-      btn.textContent = "Arrêter caméra";
-      setStatus("Scanner caméra", "Présente le code-barres ou le QR code adhérent devant la caméra.");
+      setStatus("Recherche jeu", "Vérification en cours...");
+      resultsBox.innerHTML = "";
+      resultsBox.classList.add("hidden");
+      document.getElementById("jeuSelection").classList.add("hidden");
+      document.getElementById("exemplairesZone").innerHTML = "";
+      document.getElementById("exemplairesZone").classList.add("hidden");
+      exemplaireChoisi = null;
 
       try {
-        scannerInstance = new Html5Qrcode("reader");
-        await scannerInstance.start(
-          { facingMode: "environment" },
-          {
-            fps: 20,
-            qrbox: { width: 280, height: 280 },
-            aspectRatio: 1.0
-          },
-          async (decodedText) => {
-            document.getElementById("codeAdherent").value = decodedText;
-            await stopScanner();
-            zone.classList.add("hidden");
-            btn.textContent = "Scanner caméra";
-            await verifierAdherent();
-          },
-          () => {}
-        );
+        const directUrl = API_URL
+          + "?action=getJeuByEAN"
+          + "&ean=" + encodeURIComponent(input);
 
-        scannerActif = true;
-      } catch (error) {
-        zone.classList.add("hidden");
-        btn.textContent = "Scanner caméra";
-        setStatus("Caméra indisponible", error.message || "Impossible de lancer la caméra.");
-      }
-    }
+        const directResponse = await fetch(directUrl);
+        const directData = await directResponse.json();
 
-    async function stopScanner() {
-      if (scannerInstance && scannerActif) {
-        await scannerInstance.stop();
-        await scannerInstance.clear();
-      }
-      scannerActif = false;
-      scannerInstance = null;
-    }
-
-    function scannerJeu() {
-  document.getElementById("blocJeu").classList.remove("hidden");
-  document.getElementById("eanJeu").focus();
-  document.getElementById("jeuResult").innerHTML = "En attente d’un scan jeu.";
-  document.getElementById("exemplairesZone").innerHTML = "";
-  document.getElementById("exemplairesZone").classList.add("hidden");
-  jeuCourant = null;
-  exemplaireChoisi = null;
-
-  setStatus("Scan jeu", "Scanne ou saisis le code-barres du jeu.");
-}
-    async function verifierJeu() {
-  const ean = document.getElementById("eanJeu").value.trim();
-
-  if (!ean) {
-    setStatus("EAN manquant", "Scanne ou saisis un code-barres.");
-    return;
-  }
-
-  setStatus("Recherche jeu", "Vérification en cours...");
-  document.getElementById("exemplairesZone").classList.add("hidden");
-  document.getElementById("exemplairesZone").innerHTML = "";
-  exemplaireChoisi = null;
-
-  try {
-    const url = API_URL
-      + "?action=getJeuByEAN"
-      + "&ean=" + encodeURIComponent(ean);
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.found) {
-      document.getElementById("jeuResult").innerHTML = "Jeu introuvable.";
-      setStatus("Jeu introuvable", data.message || "Aucun résultat.");
-      return;
-    }
-
-    jeuCourant = data;
-
-    document.getElementById("jeuResult").innerHTML =
-      "<strong>" + data.nom_jeu + "</strong>";
-
-    if (!data.emprunt_autorise) {
-      setStatus("Jeu non empruntable", data.message || "Jeu non empruntable.");
-      return;
-    }
-
-    await chargerExemplaires(data.id_jeu);
-
-  } catch (error) {
-    setStatus("Erreur", error.message);
-  }
-}
-    async function chargerExemplaires(idJeu) {
-  setStatus("Recherche exemplaires", "Chargement...");
-
-  try {
-    const url = API_URL
-      + "?action=getExemplairesDisponiblesByJeu"
-      + "&id_jeu=" + encodeURIComponent(idJeu);
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    const zone = document.getElementById("exemplairesZone");
-    zone.innerHTML = "";
-
-    if (!data.exemplaires_disponibles || data.exemplaires_disponibles.length === 0) {
-      setStatus("Aucun exemplaire", "Tous les exemplaires sont empruntés.");
-      return;
-    }
-
-    if (data.exemplaires_disponibles.length === 1) {
-      exemplaireChoisi = data.exemplaires_disponibles[0].id_exemplaire;
-      setStatus("Exemplaire trouvé", "Exemplaire sélectionné automatiquement.");
-      return;
-    }
-
-    data.exemplaires_disponibles.forEach(ex => {
-      const div = document.createElement("div");
-      div.className = "result-item";
-      div.innerHTML = "Exemplaire n°" + ex.numero;
-
-      div.onclick = () => {
-        exemplaireChoisi = ex.id_exemplaire;
-        setStatus("Exemplaire sélectionné", "Exemplaire choisi : " + ex.numero);
-      };
-
-      zone.appendChild(div);
-    });
-
-    zone.classList.remove("hidden");
-    setStatus("Choix exemplaire", "Sélectionne un exemplaire.");
-
-  } catch (error) {
-    setStatus("Erreur", error.message);
-  }
-}
-    async function toggleScannerJeu() {
-  const zone = document.getElementById("scannerJeuZone");
-  const btn = document.getElementById("btnCameraJeu");
-
-  if (scannerJeuActif) {
-    await stopScannerJeu();
-    zone.classList.add("hidden");
-    btn.textContent = "Scanner caméra";
-    return;
-  }
-
-  zone.classList.remove("hidden");
-  btn.textContent = "Arrêter caméra";
-
-  try {
-    scannerJeuInstance = new Html5Qrcode("readerJeu");
-
-    await scannerJeuInstance.start(
-      { facingMode: "environment" },
-      {
-  fps: 20,
-  qrbox: { width: 280, height: 280 },
-  aspectRatio: 1.0
-},
-      async (decodedText) => {
-        document.getElementById("eanJeu").value = decodedText;
-        await stopScannerJeu();
-        zone.classList.add("hidden");
-        btn.textContent = "Scanner caméra";
-        await verifierJeu();
-      }
-    );
-
-    scannerJeuActif = true;
-
-  } catch (error) {
-    zone.classList.add("hidden");
-    btn.textContent = "Scanner caméra";
-    setStatus("Caméra indisponible", error.message || "Impossible de lancer la caméra.");
-  }
-}
-
-async function stopScannerJeu() {
-  if (scannerJeuInstance && scannerJeuActif) {
-    await scannerJeuInstance.stop();
-    await scannerJeuInstance.clear();
-  }
-  scannerJeuActif = false;
-  scannerJeuInstance = null;
-}
-
-    async function rechercherJeux() {
-  const query = document.getElementById("searchJeu").value.trim();
-  const resultsBox = document.getElementById("searchJeuxResults");
-
-  if (!query) {
-    setStatus("Recherche vide", "Saisis un nom de jeu.");
-    resultsBox.classList.add("hidden");
-    return;
-  }
-
-  setStatus("Recherche jeux", "Recherche en cours...");
-  resultsBox.innerHTML = "";
-  resultsBox.classList.add("hidden");
-
-  try {
-    const url = API_URL
-      + "?action=searchJeux"
-      + "&query=" + encodeURIComponent(query);
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.ok || data.results.length === 0) {
-      setStatus("Aucun résultat", "Aucun jeu trouvé.");
-      return;
-    }
-
-    data.results.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "result-item";
-
-      div.innerHTML = `
-        <div class="result-main">${item.nom_jeu}</div>
-        <div class="result-sub">ID : ${item.id_jeu}</div>
-      `;
-
-      div.onclick = async () => {
-        jeuCourant = item;
-
-        document.getElementById("jeuResult").innerHTML =
-          "<strong>" + item.nom_jeu + "</strong>";
-
-        if (!item.empruntable) {
-          setStatus("Jeu non empruntable", "Ce jeu est désactivé.");
+        if (directData.found) {
+          await selectionnerJeu(directData);
           return;
         }
 
-        await chargerExemplaires(item.id_jeu);
+        const searchUrl = API_URL
+          + "?action=searchJeux"
+          + "&query=" + encodeURIComponent(input);
 
-        resultsBox.classList.add("hidden");
-      };
+        const searchResponse = await fetch(searchUrl);
+        const searchData = await searchResponse.json();
 
-      resultsBox.appendChild(div);
-    });
+        if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
+          setStatus("Aucun résultat", "Aucun jeu trouvé.");
+          return;
+        }
 
-    resultsBox.classList.remove("hidden");
-    setStatus("Résultats trouvés", "Choisis un jeu.");
+        searchData.results.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "result-item";
+          div.innerHTML = `
+            <div class="result-main">${item.nom_jeu}</div>
+            <div class="result-sub">ID : ${item.id_jeu}</div>
+          `;
+          div.onclick = async () => {
+            await selectionnerJeu(item);
+            resultsBox.classList.add("hidden");
+          };
+          resultsBox.appendChild(div);
+        });
 
-  } catch (error) {
-    setStatus("Erreur", error.message);
-  }
-}
+        resultsBox.classList.remove("hidden");
+        setStatus("Résultats trouvés", "Choisis un jeu dans la liste.");
+
+      } catch (error) {
+        setStatus("Erreur", error.message);
+      }
+    }
+
+    async function selectionnerJeu(item) {
+      jeuCourant = item;
+      exemplaireChoisi = null;
+
+      document.getElementById("jeuSelection").classList.remove("hidden");
+      document.getElementById("jeuNomSelection").textContent = item.nom_jeu || "";
+
+      if (!item.empruntable && !item.emprunt_autorise) {
+        document.getElementById("jeuEtatSelection").textContent = "Jeu désactivé.";
+        setStatus("Jeu non empruntable", "Ce jeu est désactivé.");
+        document.getElementById("exemplairesZone").innerHTML = "";
+        document.getElementById("exemplairesZone").classList.add("hidden");
+        return;
+      }
+
+      document.getElementById("jeuEtatSelection").textContent = "Jeu trouvable et empruntable.";
+      await chargerExemplaires(item.id_jeu);
+    }
+
+    async function chargerExemplaires(idJeu) {
+      setStatus("Recherche exemplaires", "Chargement...");
+
+      try {
+        const url = API_URL
+          + "?action=getExemplairesDisponiblesByJeu"
+          + "&id_jeu=" + encodeURIComponent(idJeu);
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const zone = document.getElementById("exemplairesZone");
+        zone.innerHTML = "";
+
+        if (!data.exemplaires_disponibles || data.exemplaires_disponibles.length === 0) {
+          setStatus("Aucun exemplaire", "Tous les exemplaires sont actuellement empruntés.");
+          zone.classList.add("hidden");
+          return;
+        }
+
+        if (data.exemplaires_disponibles.length === 1) {
+          const ex = data.exemplaires_disponibles[0];
+          exemplaireChoisi = ex.id_exemplaire;
+
+          const div = document.createElement("div");
+          div.className = "result-item";
+          div.innerHTML = `
+            <div class="result-main">Exemplaire n°${ex.numero}</div>
+            <div class="result-sub">Sélection automatique</div>
+          `;
+          zone.appendChild(div);
+          zone.classList.remove("hidden");
+
+          setStatus("Exemplaire trouvé", "Exemplaire sélectionné automatiquement.");
+          return;
+        }
+
+        data.exemplaires_disponibles.forEach(ex => {
+          const div = document.createElement("div");
+          div.className = "result-item";
+          div.innerHTML = `
+            <div class="result-main">Exemplaire n°${ex.numero}</div>
+            <div class="result-sub">Cliquer pour sélectionner</div>
+          `;
+
+          div.onclick = () => {
+            exemplaireChoisi = ex.id_exemplaire;
+            setStatus("Exemplaire sélectionné", "Exemplaire n°" + ex.numero + " sélectionné.");
+          };
+
+          zone.appendChild(div);
+        });
+
+        zone.classList.remove("hidden");
+        setStatus("Choix exemplaire", "Choisis un exemplaire disponible.");
+
+      } catch (error) {
+        setStatus("Erreur", error.message);
+      }
+    }
   </script>
 </body>
 </html>
