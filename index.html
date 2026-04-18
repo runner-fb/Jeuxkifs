@@ -106,6 +106,11 @@
       transform: scale(0.98);
     }
 
+    .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
     .btn-primary {
       background: var(--primary);
     }
@@ -311,9 +316,9 @@
           placeholder="Scanne un identifiant ou saisis nom / prénom"
           onkeydown="if(event.key === 'Enter') rechercherAdherentUnique()"
         />
-        <button class="btn btn-primary" onclick="rechercherAdherentUnique()">
-          Rechercher
-        </button>
+<button id="btnRechercheAdherent" class="btn btn-primary" onclick="rechercherAdherentUnique()">
+  Rechercher
+</button>
       </div>
 
       <div id="adherentResults" class="results hidden"></div>
@@ -384,9 +389,9 @@
           placeholder="Scanne un code-barres ou saisis un nom de jeu"
 onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherJeuUnique();}"
           />
-        <button class="btn btn-primary" onclick="rechercherJeuUnique()">
-          Rechercher
-        </button>
+        <button id="btnRechercheJeu" class="btn btn-primary" onclick="rechercherJeuUnique()">
+  Rechercher
+</button>
       </div>
 
       <div id="jeuResults" class="results hidden"></div>
@@ -479,82 +484,109 @@ document.getElementById("exemplairesBloc").classList.add("hidden");
     }
 
     async function rechercherAdherentUnique() {
-      const input = document.getElementById("adherentInput").value.trim();
-      const resultsBox = document.getElementById("adherentResults");
+  if (window.rechercheAdherentEnCours) return;
+  window.rechercheAdherentEnCours = true;
 
-      if (!input) {
-        setStatus("Recherche vide", "Saisis un identifiant, un nom ou un prénom.");
-        resultsBox.innerHTML = "";
-        resultsBox.classList.add("hidden");
-        return;
+  const input = document.getElementById("adherentInput").value.trim();
+  const resultsBox = document.getElementById("adherentResults");
+  const btn = document.getElementById("btnRechercheAdherent");
+
+  btn.disabled = true;
+  btn.style.opacity = "0.6";
+  btn.textContent = "Recherche...";
+
+  resultsBox.innerHTML = "";
+  resultsBox.classList.add("hidden");
+
+  document.getElementById("ficheAdherent").classList.remove("visible");
+  document.getElementById("blocJeu").classList.add("hidden");
+
+  if (!input) {
+    setStatus("Recherche vide", "Saisis un identifiant, un nom ou un prénom.");
+    btn.disabled = false;
+    btn.style.opacity = "1";
+    btn.textContent = "Rechercher";
+    window.rechercheAdherentEnCours = false;
+    return;
+  }
+
+  setStatus("Recherche adhérent", "Vérification en cours...");
+
+  try {
+    const directUrl = API_URL
+      + "?action=getAdherentByCode"
+      + "&code=" + encodeURIComponent(input);
+
+    const directResponse = await fetch(directUrl);
+    const directData = await directResponse.json();
+
+    if (directData.found) {
+      afficherFicheAdherent(directData);
+
+      if (String(directData.peut_emprunter || "").toLowerCase() === "oui") {
+        setStatus("Adhérent autorisé", "Tu peux choisir un jeu.");
+      } else {
+        setStatus("Adhérent bloqué", directData.motif_blocage || "Emprunt impossible.");
       }
-
-      setStatus("Recherche adhérent", "Vérification en cours...");
-      resultsBox.innerHTML = "";
-      resultsBox.classList.add("hidden");
-      document.getElementById("ficheAdherent").classList.remove("visible");
-      document.getElementById("blocJeu").classList.add("hidden");
-
-      try {
-        const directUrl = API_URL
-          + "?action=getAdherentByCode"
-          + "&code=" + encodeURIComponent(input);
-
-        const directResponse = await fetch(directUrl);
-        const directData = await directResponse.json();
-
-        if (directData.found) {
-          afficherFicheAdherent(directData);
-
-          if (String(directData.peut_emprunter || "").toLowerCase() === "oui") {
-            setStatus("Adhérent autorisé", "Tu peux choisir un jeu.");
-          } else {
-            setStatus("Adhérent bloqué", directData.motif_blocage || "Emprunt impossible.");
-          }
-          return;
-        }
-
-        const searchUrl = API_URL
-          + "?action=searchAdherents"
-          + "&query=" + encodeURIComponent(input);
-
-        const searchResponse = await fetch(searchUrl);
-        const searchData = await searchResponse.json();
-
-        if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
-          setStatus("Aucun résultat", "Aucun adhérent ne correspond à cette recherche.");
-          return;
-        }
-
-        searchData.results.forEach(item => {
-          const div = document.createElement("div");
-          div.className = "result-item";
-          div.innerHTML = `
-            <div class="result-main">${item.nom_complet}</div>
-            <div class="result-sub">ID : ${item.id_adherent} · Profil : ${item.profil}</div>
-          `;
-          div.onclick = () => {
-            document.getElementById("adherentInput").value = item.id_adherent;
-            afficherFicheAdherent(item);
-
-            if (String(item.peut_emprunter || "").toLowerCase() === "oui") {
-              setStatus("Adhérent sélectionné", "Tu peux choisir un jeu.");
-            } else {
-              setStatus("Adhérent bloqué", item.motif_blocage || "Emprunt impossible.");
-            }
-
-            resultsBox.classList.add("hidden");
-          };
-          resultsBox.appendChild(div);
-        });
-
-        resultsBox.classList.remove("hidden");
-        setStatus("Résultats trouvés", "Choisis un adhérent dans la liste.");
-
-      } catch (error) {
-        setStatus("Erreur", error.message);
-      }
+      return;
     }
+
+    const searchUrl = API_URL
+      + "?action=searchAdherents"
+      + "&query=" + encodeURIComponent(input);
+
+    const searchResponse = await fetch(searchUrl);
+    const searchData = await searchResponse.json();
+
+    if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
+      setStatus("Aucun résultat", "Aucun adhérent ne correspond à cette recherche.");
+      return;
+    }
+
+    const adherentsUniques = [];
+    const idsVus = new Set();
+
+    searchData.results.forEach(item => {
+      if (!idsVus.has(item.id_adherent)) {
+        idsVus.add(item.id_adherent);
+        adherentsUniques.push(item);
+      }
+    });
+
+    adherentsUniques.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "result-item";
+      div.innerHTML = `
+        <div class="result-main">${item.nom_complet}</div>
+        <div class="result-sub">ID : ${item.id_adherent} · Profil : ${item.profil}</div>
+      `;
+      div.onclick = () => {
+        document.getElementById("adherentInput").value = item.id_adherent;
+        afficherFicheAdherent(item);
+
+        if (String(item.peut_emprunter || "").toLowerCase() === "oui") {
+          setStatus("Adhérent sélectionné", "Tu peux choisir un jeu.");
+        } else {
+          setStatus("Adhérent bloqué", item.motif_blocage || "Emprunt impossible.");
+        }
+
+        resultsBox.classList.add("hidden");
+      };
+      resultsBox.appendChild(div);
+    });
+
+    resultsBox.classList.remove("hidden");
+    setStatus("Résultats trouvés", "Choisis un adhérent dans la liste.");
+
+  } catch (error) {
+    setStatus("Erreur", error.message);
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = "1";
+    btn.textContent = "Rechercher";
+    window.rechercheAdherentEnCours = false;
+  }
+}
 
     function ouvrirBlocJeu() {
       jeuCourant = null;
@@ -574,25 +606,31 @@ document.getElementById("exemplairesBloc").classList.add("hidden");
     }
 
    async function rechercherJeuUnique() {
-  // 🔒 Anti double appel (bouton + Entrée)
   if (window.rechercheJeuEnCours) return;
   window.rechercheJeuEnCours = true;
 
   const input = document.getElementById("jeuInput").value.trim();
   const resultsBox = document.getElementById("jeuResults");
+  const btn = document.getElementById("btnRechercheJeu");
 
-  // 🧹 Nettoyage systématique
+  btn.disabled = true;
+  btn.style.opacity = "0.6";
+  btn.textContent = "Recherche...";
+
   resultsBox.innerHTML = "";
   resultsBox.classList.add("hidden");
 
   document.getElementById("jeuSelection").classList.add("hidden");
   document.getElementById("exemplairesZone").innerHTML = "";
-  document.getElementById("exemplairesBloc").classList.add("hidden");
+  document.getElementById("exemplairesBloc")?.classList.add("hidden");
 
   exemplaireChoisi = null;
 
   if (!input) {
     setStatus("Recherche vide", "Saisis un code-barres ou un nom de jeu.");
+    btn.disabled = false;
+    btn.style.opacity = "1";
+    btn.textContent = "Rechercher";
     window.rechercheJeuEnCours = false;
     return;
   }
@@ -600,7 +638,6 @@ document.getElementById("exemplairesBloc").classList.add("hidden");
   setStatus("Recherche jeu", "Vérification en cours...");
 
   try {
-    // 🔎 1. Tentative directe par EAN
     const directUrl = API_URL
       + "?action=getJeuByEAN"
       + "&ean=" + encodeURIComponent(input);
@@ -613,7 +650,6 @@ document.getElementById("exemplairesBloc").classList.add("hidden");
       return;
     }
 
-    // 🔎 2. Recherche par nom
     const searchUrl = API_URL
       + "?action=searchJeux"
       + "&query=" + encodeURIComponent(input);
@@ -626,7 +662,6 @@ document.getElementById("exemplairesBloc").classList.add("hidden");
       return;
     }
 
-    // 🧹 Sécurité anti doublon (au cas où API renvoie des doublons)
     const jeuxUniques = [];
     const idsVus = new Set();
 
@@ -637,7 +672,6 @@ document.getElementById("exemplairesBloc").classList.add("hidden");
       }
     });
 
-    // 🧱 Affichage résultats
     jeuxUniques.forEach(item => {
       const div = document.createElement("div");
       div.className = "result-item";
@@ -660,7 +694,9 @@ document.getElementById("exemplairesBloc").classList.add("hidden");
   } catch (error) {
     setStatus("Erreur", error.message);
   } finally {
-    // 🔓 On libère le verrou
+    btn.disabled = false;
+    btn.style.opacity = "1";
+    btn.textContent = "Rechercher";
     window.rechercheJeuEnCours = false;
   }
 }
