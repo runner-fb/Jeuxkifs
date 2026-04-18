@@ -416,10 +416,14 @@
         </div>
 
         <div class="actions">
-          <button class="btn btn-warning" onclick="retourFicheAdherent()">
-            Retour à la fiche
-          </button>
-        </div>
+  <button id="btnValiderEmprunt" class="btn btn-success hidden" onclick="validerEmprunt()">
+    Valider l’emprunt
+  </button>
+
+  <button class="btn btn-warning" onclick="retourFicheAdherent()">
+    Retour à la fiche
+  </button>
+</div>
 
         <div id="statusJeu" class="status-box">
           <strong>Prêt.</strong><br>
@@ -479,6 +483,7 @@
       document.getElementById("jeuEtatSelection").textContent = "";
       document.getElementById("exemplairesZone").innerHTML = "";
       document.getElementById("exemplairesBloc").classList.add("hidden");
+      document.getElementById("btnValiderEmprunt").classList.add("hidden");
 
       showView("viewFiche");
       setHeaderSubtitle("Consulte la fiche de l’adhérent.");
@@ -497,6 +502,7 @@
       document.getElementById("jeuEtatSelection").textContent = "";
       document.getElementById("exemplairesZone").innerHTML = "";
       document.getElementById("exemplairesBloc").classList.add("hidden");
+      document.getElementById("btnValiderEmprunt").classList.add("hidden");
 
       showView("viewJeu");
       setHeaderSubtitle("Recherche un jeu à emprunter.");
@@ -757,18 +763,20 @@
         zone.innerHTML = "";
 
         if (!data.exemplaires_disponibles || data.exemplaires_disponibles.length === 0) {
-          setStatus("statusJeu", "Aucun exemplaire", "Tous les exemplaires sont actuellement empruntés.");
-          bloc.classList.add("hidden");
-          return;
-        }
+  document.getElementById("btnValiderEmprunt").classList.add("hidden");
+  setStatus("statusJeu", "Aucun exemplaire", "Tous les exemplaires sont actuellement empruntés.");
+  bloc.classList.add("hidden");
+  return;
+}
 
-        if (data.exemplaires_disponibles.length === 1) {
-          const ex = data.exemplaires_disponibles[0];
-          exemplaireChoisi = ex.id_exemplaire;
-          bloc.classList.add("hidden");
-          setStatus("statusJeu", "Exemplaire sélectionné", "Un seul exemplaire disponible → sélection automatique.");
-          return;
-        }
+       if (data.exemplaires_disponibles.length === 1) {
+  const ex = data.exemplaires_disponibles[0];
+  exemplaireChoisi = ex.id_exemplaire;
+  bloc.classList.add("hidden");
+  document.getElementById("btnValiderEmprunt").classList.remove("hidden");
+  setStatus("statusJeu", "Exemplaire sélectionné", "Un seul exemplaire disponible → sélection automatique.");
+  return;
+}
 
         data.exemplaires_disponibles.forEach(ex => {
           const div = document.createElement("div");
@@ -778,9 +786,10 @@
             <div class="result-sub">Cliquer pour sélectionner</div>
           `;
           div.onclick = () => {
-            exemplaireChoisi = ex.id_exemplaire;
-            setStatus("statusJeu", "Exemplaire sélectionné", "Exemplaire n°" + ex.numero + " sélectionné.");
-          };
+  exemplaireChoisi = ex.id_exemplaire;
+  document.getElementById("btnValiderEmprunt").classList.remove("hidden");
+  setStatus("statusJeu", "Exemplaire sélectionné", "Exemplaire n°" + ex.numero + " sélectionné.");
+};
           zone.appendChild(div);
         });
 
@@ -791,6 +800,65 @@
         setStatus("statusJeu", "Erreur", error.message);
       }
     }
+    async function validerEmprunt() {
+  const btn = document.getElementById("btnValiderEmprunt");
+
+  if (!adherentCourant) {
+    setStatus("statusJeu", "Adhérent manquant", "Aucun adhérent sélectionné.");
+    return;
+  }
+
+  if (!jeuCourant) {
+    setStatus("statusJeu", "Jeu manquant", "Aucun jeu sélectionné.");
+    return;
+  }
+
+  if (!exemplaireChoisi) {
+    setStatus("statusJeu", "Exemplaire manquant", "Choisis un exemplaire avant de valider.");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Validation...";
+
+  try {
+    const payload = {
+      id_adherent: adherentCourant.id_adherent,
+      id_exemplaire: exemplaireChoisi
+    };
+
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        action: "createEmprunt",
+        payload: payload
+      })
+    });
+
+    const data = await response.json();
+
+    if (!data.ok) {
+      setStatus("statusJeu", "Échec", data.message || "Impossible d’enregistrer l’emprunt.");
+      return;
+    }
+
+    setStatus("statusJeu", "Emprunt enregistré", "L’emprunt a bien été créé.");
+
+    // remise à zéro complète après succès
+    const nomAdherent = adherentCourant.nom_complet || "";
+    reinitialiserTout();
+    setStatus("statusAdherent", "Succès", "Emprunt enregistré pour " + nomAdherent + ".");
+
+  } catch (error) {
+    setStatus("statusJeu", "Erreur", error.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Valider l’emprunt";
+  }
+}
   </script>
 </body>
 </html>
