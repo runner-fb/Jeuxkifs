@@ -212,7 +212,11 @@
     .hidden {
       display: none !important;
     }
-
+#reader, #readerJeu {
+  border: 3px solid #2563eb;
+  border-radius: 16px;
+  overflow: hidden;
+}
     .results {
       margin-top: 12px;
       display: grid;
@@ -580,7 +584,8 @@ let exemplaireChoisi = null;
           { facingMode: "environment" },
           {
             fps: 10,
-            qrbox: 250
+            qrbox: { width: 350, height: 350 },
+            aspectRatio: 1.0
           },
           async (decodedText) => {
             document.getElementById("codeAdherent").value = decodedText;
@@ -727,7 +732,11 @@ let exemplaireChoisi = null;
 
     await scannerJeuInstance.start(
       { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
+      {
+  fps: 10,
+  qrbox: { width: 350, height: 350 },
+  aspectRatio: 1.0
+},
       async (decodedText) => {
         document.getElementById("eanJeu").value = decodedText;
         await stopScannerJeu();
