@@ -906,24 +906,56 @@ setStatus("statusSucces", "Succès.", "Choisis la suite.");
     btn.textContent = "Valider l’emprunt";
   }
 }
-    function emprunterAutreJeu() {
-  jeuCourant = null;
-  exemplaireChoisi = null;
+    async function emprunterAutreJeu() {
+  if (!adherentCourant || !adherentCourant.id_adherent) {
+    reinitialiserTout();
+    return;
+  }
 
-  document.getElementById("jeuInput").value = "";
-  document.getElementById("jeuResults").innerHTML = "";
-  document.getElementById("jeuResults").classList.add("hidden");
-  document.getElementById("jeuSelection").classList.add("hidden");
-  document.getElementById("jeuNomSelection").textContent = "";
-  document.getElementById("jeuEtatSelection").textContent = "";
-  document.getElementById("exemplairesZone").innerHTML = "";
-  document.getElementById("exemplairesBloc").classList.add("hidden");
-  document.getElementById("btnValiderEmprunt").classList.add("hidden");
+  setStatus("statusSucces", "Vérification", "Actualisation de la fiche adhérent...");
 
-  showView("viewJeu");
-  setHeaderSubtitle("Recherche un jeu à emprunter.");
-  setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
-  document.getElementById("jeuInput").focus();
+  try {
+    const url = API_URL
+      + "?action=getAdherentByCode"
+      + "&code=" + encodeURIComponent(adherentCourant.id_adherent);
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.found) {
+      reinitialiserTout();
+      return;
+    }
+
+    adherentCourant = data;
+
+    if (String(data.peut_emprunter || "").toLowerCase() !== "oui") {
+      afficherFicheAdherent(data);
+      setStatus("statusFiche", "Adhérent bloqué", data.motif_blocage || "Emprunt impossible.");
+      return;
+    }
+
+    jeuCourant = null;
+    exemplaireChoisi = null;
+
+    document.getElementById("jeuInput").value = "";
+    document.getElementById("jeuResults").innerHTML = "";
+    document.getElementById("jeuResults").classList.add("hidden");
+    document.getElementById("jeuSelection").classList.add("hidden");
+    document.getElementById("jeuNomSelection").textContent = "";
+    document.getElementById("jeuEtatSelection").textContent = "";
+    document.getElementById("exemplairesZone").innerHTML = "";
+    document.getElementById("exemplairesBloc").classList.add("hidden");
+    document.getElementById("btnValiderEmprunt").classList.add("hidden");
+
+    showView("viewJeu");
+    setHeaderSubtitle("Recherche un jeu à emprunter.");
+    setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
+    document.getElementById("jeuInput").focus();
+
+  } catch (error) {
+    setStatus("statusSucces", "Erreur", error.message);
+  }
 }
   </script>
 </body>
