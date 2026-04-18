@@ -382,8 +382,8 @@
           class="text-input"
           type="text"
           placeholder="Scanne un code-barres ou saisis un nom de jeu"
-          onkeydown="if(event.key === 'Enter') rechercherJeuUnique()"
-        />
+onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherJeuUnique();}"
+          />
         <button class="btn btn-primary" onclick="rechercherJeuUnique()">
           Rechercher
         </button>
@@ -396,8 +396,10 @@
         <span id="jeuEtatSelection"></span>
       </div>
 
-      <div id="exemplairesZone" class="results hidden"></div>
-    </section>
+<div id="exemplairesBloc" class="hidden">
+  <label class="label" style="margin-top:14px;">Exemplaires disponibles</label>
+  <div id="exemplairesZone" class="results"></div>
+</div>    </section>
   </div>
 
   <script>
@@ -470,7 +472,7 @@
       document.getElementById("jeuEtatSelection").textContent = "";
 
       document.getElementById("exemplairesZone").innerHTML = "";
-      document.getElementById("exemplairesZone").classList.add("hidden");
+document.getElementById("exemplairesBloc").classList.add("hidden");
 
       setStatus("Prêt.", "En attente d’une recherche adhérent.");
       document.getElementById("adherentInput").focus();
@@ -566,77 +568,102 @@
       document.getElementById("jeuNomSelection").textContent = "";
       document.getElementById("jeuEtatSelection").textContent = "";
       document.getElementById("exemplairesZone").innerHTML = "";
-      document.getElementById("exemplairesZone").classList.add("hidden");
-
+document.getElementById("exemplairesBloc").classList.add("hidden");
       document.getElementById("jeuInput").focus();
       setStatus("Choix du jeu", "Scanne un code-barres ou saisis un nom de jeu.");
     }
 
-    async function rechercherJeuUnique() {
-      const input = document.getElementById("jeuInput").value.trim();
-      const resultsBox = document.getElementById("jeuResults");
+   async function rechercherJeuUnique() {
+  // 🔒 Anti double appel (bouton + Entrée)
+  if (window.rechercheJeuEnCours) return;
+  window.rechercheJeuEnCours = true;
 
-      if (!input) {
-        setStatus("Recherche vide", "Saisis un code-barres ou un nom de jeu.");
-        resultsBox.innerHTML = "";
-        resultsBox.classList.add("hidden");
-        return;
-      }
+  const input = document.getElementById("jeuInput").value.trim();
+  const resultsBox = document.getElementById("jeuResults");
 
-      setStatus("Recherche jeu", "Vérification en cours...");
-      resultsBox.innerHTML = "";
-      resultsBox.classList.add("hidden");
-      document.getElementById("jeuSelection").classList.add("hidden");
-      document.getElementById("exemplairesZone").innerHTML = "";
-      document.getElementById("exemplairesZone").classList.add("hidden");
-      exemplaireChoisi = null;
+  // 🧹 Nettoyage systématique
+  resultsBox.innerHTML = "";
+  resultsBox.classList.add("hidden");
 
-      try {
-        const directUrl = API_URL
-          + "?action=getJeuByEAN"
-          + "&ean=" + encodeURIComponent(input);
+  document.getElementById("jeuSelection").classList.add("hidden");
+  document.getElementById("exemplairesZone").innerHTML = "";
+  document.getElementById("exemplairesBloc").classList.add("hidden");
 
-        const directResponse = await fetch(directUrl);
-        const directData = await directResponse.json();
+  exemplaireChoisi = null;
 
-        if (directData.found) {
-          await selectionnerJeu(directData);
-          return;
-        }
+  if (!input) {
+    setStatus("Recherche vide", "Saisis un code-barres ou un nom de jeu.");
+    window.rechercheJeuEnCours = false;
+    return;
+  }
 
-        const searchUrl = API_URL
-          + "?action=searchJeux"
-          + "&query=" + encodeURIComponent(input);
+  setStatus("Recherche jeu", "Vérification en cours...");
 
-        const searchResponse = await fetch(searchUrl);
-        const searchData = await searchResponse.json();
+  try {
+    // 🔎 1. Tentative directe par EAN
+    const directUrl = API_URL
+      + "?action=getJeuByEAN"
+      + "&ean=" + encodeURIComponent(input);
 
-        if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
-          setStatus("Aucun résultat", "Aucun jeu trouvé.");
-          return;
-        }
+    const directResponse = await fetch(directUrl);
+    const directData = await directResponse.json();
 
-        searchData.results.forEach(item => {
-          const div = document.createElement("div");
-          div.className = "result-item";
-          div.innerHTML = `
-            <div class="result-main">${item.nom_jeu}</div>
-            <div class="result-sub">ID : ${item.id_jeu}</div>
-          `;
-          div.onclick = async () => {
-            await selectionnerJeu(item);
-            resultsBox.classList.add("hidden");
-          };
-          resultsBox.appendChild(div);
-        });
-
-        resultsBox.classList.remove("hidden");
-        setStatus("Résultats trouvés", "Choisis un jeu dans la liste.");
-
-      } catch (error) {
-        setStatus("Erreur", error.message);
-      }
+    if (directData.found) {
+      await selectionnerJeu(directData);
+      return;
     }
+
+    // 🔎 2. Recherche par nom
+    const searchUrl = API_URL
+      + "?action=searchJeux"
+      + "&query=" + encodeURIComponent(input);
+
+    const searchResponse = await fetch(searchUrl);
+    const searchData = await searchResponse.json();
+
+    if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
+      setStatus("Aucun résultat", "Aucun jeu trouvé.");
+      return;
+    }
+
+    // 🧹 Sécurité anti doublon (au cas où API renvoie des doublons)
+    const jeuxUniques = [];
+    const idsVus = new Set();
+
+    searchData.results.forEach(item => {
+      if (!idsVus.has(item.id_jeu)) {
+        idsVus.add(item.id_jeu);
+        jeuxUniques.push(item);
+      }
+    });
+
+    // 🧱 Affichage résultats
+    jeuxUniques.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "result-item";
+      div.innerHTML = `
+        <div class="result-main">${item.nom_jeu}</div>
+        <div class="result-sub">ID : ${item.id_jeu}</div>
+      `;
+
+      div.onclick = async () => {
+        await selectionnerJeu(item);
+        resultsBox.classList.add("hidden");
+      };
+
+      resultsBox.appendChild(div);
+    });
+
+    resultsBox.classList.remove("hidden");
+    setStatus("Résultats trouvés", "Choisis un jeu dans la liste.");
+
+  } catch (error) {
+    setStatus("Erreur", error.message);
+  } finally {
+    // 🔓 On libère le verrou
+    window.rechercheJeuEnCours = false;
+  }
+}
 
     async function selectionnerJeu(item) {
       jeuCourant = item;
@@ -649,7 +676,7 @@
         document.getElementById("jeuEtatSelection").textContent = "Jeu désactivé.";
         setStatus("Jeu non empruntable", "Ce jeu est désactivé.");
         document.getElementById("exemplairesZone").innerHTML = "";
-        document.getElementById("exemplairesZone").classList.add("hidden");
+document.getElementById("exemplairesBloc").classList.add("hidden");
         return;
       }
 
@@ -669,11 +696,12 @@
         const data = await response.json();
 
         const zone = document.getElementById("exemplairesZone");
+        const bloc = document.getElementById("exemplairesBloc");
         zone.innerHTML = "";
 
         if (!data.exemplaires_disponibles || data.exemplaires_disponibles.length === 0) {
           setStatus("Aucun exemplaire", "Tous les exemplaires sont actuellement empruntés.");
-          zone.classList.add("hidden");
+bloc.classList.add("hidden");
           return;
         }
 
@@ -688,8 +716,7 @@
             <div class="result-sub">Sélection automatique</div>
           `;
           zone.appendChild(div);
-          zone.classList.remove("hidden");
-
+bloc.classList.remove("hidden");
           setStatus("Exemplaire trouvé", "Exemplaire sélectionné automatiquement.");
           return;
         }
@@ -710,8 +737,7 @@
           zone.appendChild(div);
         });
 
-        zone.classList.remove("hidden");
-        setStatus("Choix exemplaire", "Choisis un exemplaire disponible.");
+bloc.classList.remove("hidden");        setStatus("Choix exemplaire", "Choisis un exemplaire disponible.");
 
       } catch (error) {
         setStatus("Erreur", error.message);
