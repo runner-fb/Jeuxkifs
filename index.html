@@ -822,23 +822,13 @@
   btn.textContent = "Validation...";
 
   try {
-    const payload = {
-      id_adherent: adherentCourant.id_adherent,
-      id_exemplaire: exemplaireChoisi
-    };
+    const url = API_URL
+  + "?action=createEmprunt"
+  + "&id_adherent=" + encodeURIComponent(adherentCourant.id_adherent)
+  + "&id_exemplaire=" + encodeURIComponent(exemplaireChoisi);
 
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        action: "createEmprunt",
-        payload: payload
-      })
-    });
-
-    const data = await response.json();
+const response = await fetch(url);
+const data = await response.json();
 
     if (!data.ok) {
       setStatus("statusJeu", "Échec", data.message || "Impossible d’enregistrer l’emprunt.");
