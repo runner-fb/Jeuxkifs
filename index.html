@@ -389,6 +389,22 @@
     <section id="blocJeu" class="card hidden">
   <label class="label">Scan jeu (code-barres)</label>
 
+      <label class="label" style="margin-top:12px;">Recherche nom de jeu</label>
+
+<div class="input-row two">
+  <input
+    id="searchJeu"
+    class="text-input"
+    type="text"
+    placeholder="Exemple : catan, skull, azul..."
+  />
+  <button class="btn btn-primary" onclick="rechercherJeux()">
+    Rechercher
+  </button>
+</div>
+
+<div id="searchJeuxResults" class="results hidden"></div>
+
   <div class="input-row">
     <input
       id="eanJeu"
@@ -772,6 +788,69 @@ async function stopScannerJeu() {
   }
   scannerJeuActif = false;
   scannerJeuInstance = null;
+}
+
+    async function rechercherJeux() {
+  const query = document.getElementById("searchJeu").value.trim();
+  const resultsBox = document.getElementById("searchJeuxResults");
+
+  if (!query) {
+    setStatus("Recherche vide", "Saisis un nom de jeu.");
+    resultsBox.classList.add("hidden");
+    return;
+  }
+
+  setStatus("Recherche jeux", "Recherche en cours...");
+  resultsBox.innerHTML = "";
+  resultsBox.classList.add("hidden");
+
+  try {
+    const url = API_URL
+      + "?action=searchJeux"
+      + "&query=" + encodeURIComponent(query);
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.ok || data.results.length === 0) {
+      setStatus("Aucun résultat", "Aucun jeu trouvé.");
+      return;
+    }
+
+    data.results.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "result-item";
+
+      div.innerHTML = `
+        <div class="result-main">${item.nom_jeu}</div>
+        <div class="result-sub">ID : ${item.id_jeu}</div>
+      `;
+
+      div.onclick = async () => {
+        jeuCourant = item;
+
+        document.getElementById("jeuResult").innerHTML =
+          "<strong>" + item.nom_jeu + "</strong>";
+
+        if (!item.empruntable) {
+          setStatus("Jeu non empruntable", "Ce jeu est désactivé.");
+          return;
+        }
+
+        await chargerExemplaires(item.id_jeu);
+
+        resultsBox.classList.add("hidden");
+      };
+
+      resultsBox.appendChild(div);
+    });
+
+    resultsBox.classList.remove("hidden");
+    setStatus("Résultats trouvés", "Choisis un jeu.");
+
+  } catch (error) {
+    setStatus("Erreur", error.message);
+  }
 }
   </script>
 </body>
