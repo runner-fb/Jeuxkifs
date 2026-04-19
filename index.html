@@ -310,12 +310,13 @@
         <label for="adherentInput" class="label">Adhérent</label>
         <div class="input-row">
           <input
-            id="adherentInput"
-            class="text-input"
-            type="text"
-            placeholder="Scanne un identifiant ou saisis nom / prénom"
-            onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherAdherentUnique();}"
-          />
+  id="adherentInput"
+  class="text-input"
+  type="text"
+  placeholder="Scanne ou tape nom / prénom"
+  oninput="rechercheAutoAdherent()"
+  onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherAdherentUnique();}"
+/>
           <button id="btnRechercheAdherent" class="btn btn-primary" onclick="rechercherAdherentUnique()">
             Rechercher
           </button>
@@ -628,6 +629,20 @@
   afficherFicheAdherent(data);
 }
 
+let timerRechercheAdherent = null;
+
+function rechercheAutoAdherent() {
+  clearTimeout(timerRechercheAdherent);
+
+  timerRechercheAdherent = setTimeout(() => {
+    const input = document.getElementById("adherentInput").value.trim();
+
+    if (input.length >= 2) {
+      rechercherAdherentUnique();
+    }
+  }, 300);
+}
+    
   async function rechercherAdherentUnique() {
   if (window.rechercheAdherentEnCours) return;
   window.rechercheAdherentEnCours = true;
