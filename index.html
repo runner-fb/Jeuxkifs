@@ -468,6 +468,9 @@
   let exemplaireChoisi = null;
 
   async function chargerIndex() {
+  try {
+    setStatus("statusAdherent", "Chargement", "Chargement des données...");
+
     const resAdh = await fetch(API_URL + "?action=getAdherentsIndex");
     const dataAdh = await resAdh.json();
     adherentsIndex = dataAdh.data || [];
@@ -475,7 +478,16 @@
     const resJeux = await fetch(API_URL + "?action=getJeuxIndex");
     const dataJeux = await resJeux.json();
     jeuxIndex = dataJeux.data || [];
+
+    console.log("INDEX ADHERENTS :", adherentsIndex.length, adherentsIndex.slice(0, 5));
+    console.log("INDEX JEUX :", jeuxIndex.length, jeuxIndex.slice(0, 5));
+
+    setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
+  } catch (e) {
+    console.error("ERREUR CHARGEMENT INDEX :", e);
+    setStatus("statusAdherent", "Erreur", "Impossible de charger les index.");
   }
+}
 
   function setHeaderSubtitle(text) {
     document.getElementById("headerSubtitle").textContent = text;
@@ -617,103 +629,115 @@
 }
 
   async function rechercherAdherentUnique() {
-    if (window.rechercheAdherentEnCours) return;
-    window.rechercheAdherentEnCours = true;
+  if (window.rechercheAdherentEnCours) return;
+  window.rechercheAdherentEnCours = true;
 
-    const input = document.getElementById("adherentInput").value.trim();
-    const resultsBox = document.getElementById("adherentResults");
-    const btn = document.getElementById("btnRechercheAdherent");
+  if (adherentsIndex.length === 0) {
+    setStatus("statusAdherent", "Chargement", "Les données adhérents ne sont pas encore prêtes.");
+    window.rechercheAdherentEnCours = false;
+    return;
+  }
 
-    resultsBox.innerHTML = "";
-    resultsBox.classList.add("hidden");
+  const input = document.getElementById("adherentInput").value.trim();
+  const resultsBox = document.getElementById("adherentResults");
+  const btn = document.getElementById("btnRechercheAdherent");
 
-    if (!input) {
-      setStatus("statusAdherent", "Erreur", "Veuillez saisir un code ou un nom.");
-      window.rechercheAdherentEnCours = false;
+  resultsBox.innerHTML = "";
+  resultsBox.classList.add("hidden");
+
+  if (!input) {
+    setStatus("statusAdherent", "Erreur", "Veuillez saisir un code ou un nom.");
+    window.rechercheAdherentEnCours = false;
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Recherche...";
+
+  try {
+    const estUnCode = /^[0-9]+$/.test(input);
+
+    if (estUnCode) {
+      const directUrl = API_URL
+        + "?action=getAdherentByCode"
+        + "&code=" + encodeURIComponent(input);
+
+      const directResponse = await fetch(directUrl);
+      const directData = await directResponse.json();
+
+      if (directData.found) {
+        afficherFicheAdherent(directData);
+        return;
+      }
+
+      setStatus("statusAdherent", "Introuvable", "Aucun adhérent trouvé.");
       return;
     }
 
-    btn.disabled = true;
-    btn.textContent = "Recherche...";
+    const query = input
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
 
-    try {
-      const estUnCode = /^[0-9]+$/.test(input);
+    const results = adherentsIndex.filter(a => {
+      const nom = String(a.nom || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
 
-      if (estUnCode) {
-        const directUrl = API_URL
-          + "?action=getAdherentByCode"
-          + "&code=" + encodeURIComponent(input);
+      const prenom = String(a.prenom || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
 
-        const directResponse = await fetch(directUrl);
-        const directData = await directResponse.json();
+      const nomComplet = String(a.nom_complet || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
 
-        if (directData.found) {
-          afficherFicheAdherent(directData);
-          btn.disabled = false;
-          btn.textContent = "Rechercher";
-          window.rechercheAdherentEnCours = false;
-          return;
-        }
+      const nomInverse = (nom + " " + prenom).trim();
 
-        setStatus("statusAdherent", "Introuvable", "Aucun adhérent trouvé.");
-        btn.disabled = false;
-        btn.textContent = "Rechercher";
-        window.rechercheAdherentEnCours = false;
-        return;
-      }
+      return (
+        nom.includes(query) ||
+        prenom.includes(query) ||
+        nomComplet.includes(query) ||
+        nomInverse.includes(query)
+      );
+    });
 
-      const query = input.toLowerCase();
+    console.log("RECHERCHE ADHERENT :", input, "=>", results.length, results);
 
-const results = adherentsIndex.filter(a => {
-  const nom = String(a.nom || "").toLowerCase();
-  const prenom = String(a.prenom || "").toLowerCase();
-  const nomComplet = String(a.nom_complet || "").toLowerCase();
-  const nomInverse = (nom + " " + prenom).trim();
-
-  return (
-    nom.includes(query) ||
-    prenom.includes(query) ||
-    nomComplet.includes(query) ||
-    nomInverse.includes(query)
-  );
-});
-
-      if (results.length === 0) {
-        setStatus("statusAdherent", "Aucun résultat", "Aucun adhérent ne correspond.");
-        btn.disabled = false;
-        btn.textContent = "Rechercher";
-        window.rechercheAdherentEnCours = false;
-        return;
-      }
-
-      resultsBox.innerHTML = "";
-
-      results.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "result-item";
-        div.innerHTML = `
-          <div class="result-main">${item.nom_complet}</div>
-          <div class="result-sub">ID : ${item.id_adherent}</div>
-        `;
-        ddiv.onclick = async () => {
-  document.getElementById("adherentInput").value = item.id_adherent;
-  resultsBox.classList.add("hidden");
-  await chargerAdherentComplet(item.id_adherent);
-};
-        resultsBox.appendChild(div);
-      });
-
-      resultsBox.classList.remove("hidden");
-      setStatus("statusAdherent", "Résultats", "Sélectionne un adhérent.");
-
-    } catch (e) {
-      setStatus("statusAdherent", "Erreur", e.message);
+    if (results.length === 0) {
+      setStatus("statusAdherent", "Aucun résultat", "Aucun adhérent ne correspond.");
+      return;
     }
 
+    results.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "result-item";
+      div.innerHTML = `
+        <div class="result-main">${item.nom_complet}</div>
+        <div class="result-sub">ID : ${item.id_adherent}</div>
+      `;
+      div.onclick = async () => {
+        document.getElementById("adherentInput").value = item.id_adherent;
+        resultsBox.classList.add("hidden");
+        await chargerAdherentComplet(item.id_adherent);
+      };
+      resultsBox.appendChild(div);
+    });
+
+    resultsBox.classList.remove("hidden");
+    setStatus("statusAdherent", "Résultats", "Sélectionne un adhérent.");
+  } catch (e) {
+    console.error("ERREUR RECHERCHE ADHERENT :", e);
+    setStatus("statusAdherent", "Erreur", e.message);
+  } finally {
     btn.disabled = false;
     btn.textContent = "Rechercher";
     window.rechercheAdherentEnCours = false;
   }
+}
 
   async function rechercherJeuUnique() {
     if (window.rechercheJeuEnCours) return;
