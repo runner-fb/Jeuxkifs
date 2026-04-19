@@ -392,13 +392,14 @@
 
         <label for="jeuInput" class="label">Jeu</label>
         <div class="input-row">
-          <input
-            id="jeuInput"
-            class="text-input"
-            type="text"
-            placeholder="Scanne un code-barres ou saisis un nom de jeu"
-            onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherJeuUnique();}"
-          />
+         <input
+  id="jeuInput"
+  class="text-input"
+  type="text"
+  placeholder="Scanne ou tape un nom de jeu"
+  oninput="rechercheAutoJeu()"
+  onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherJeuUnique();}"
+/>
           <button id="btnRechercheJeu" class="btn btn-primary" onclick="rechercherJeuUnique()">
             Rechercher
           </button>
@@ -506,6 +507,18 @@
     box.innerHTML = "<strong>" + title + "</strong><br>" + text;
   }
 
+    function focusLater(elementId) {
+  setTimeout(() => {
+    const el = document.getElementById(elementId);
+    if (el) {
+      el.focus();
+      if (typeof el.select === "function" && el.tagName === "INPUT") {
+        el.select();
+      }
+    }
+  }, 50);
+}
+
   function retourRechercheAdherent() {
     adherentCourant = null;
     jeuCourant = null;
@@ -526,10 +539,9 @@
     document.getElementById("btnValiderEmprunt").classList.add("hidden");
 
     showView("viewAdherent");
-    setHeaderSubtitle("Recherche un adhérent pour commencer.");
-    setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
-    document.getElementById("adherentInput").focus();
-  }
+setHeaderSubtitle("Recherche un adhérent pour commencer.");
+setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
+focusLater("adherentInput");
 
   function retourFicheAdherent() {
     jeuCourant = null;
@@ -565,10 +577,9 @@
     document.getElementById("btnValiderEmprunt").classList.add("hidden");
 
     showView("viewJeu");
-    setHeaderSubtitle("Recherche un jeu à emprunter.");
-    setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
-    document.getElementById("jeuInput").focus();
-  }
+setHeaderSubtitle("Recherche un jeu à emprunter.");
+setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
+focusLater("jeuInput");
 
   function afficherFicheAdherent(data) {
     adherentCourant = data;
@@ -607,10 +618,11 @@
     setHeaderSubtitle("Consulte la fiche de l’adhérent.");
 
     if (peutEmprunter) {
-      setStatus("statusFiche", "Adhérent autorisé", "Tu peux passer au choix du jeu.");
-    } else {
-      setStatus("statusFiche", "Adhérent bloqué", data.motif_blocage || "Emprunt impossible.");
-    }
+  setStatus("statusFiche", "Adhérent autorisé", "Tu peux passer au choix du jeu.");
+  focusLater("btnChoisirJeu");
+} else {
+  setStatus("statusFiche", "Adhérent bloqué", data.motif_blocage || "Emprunt impossible.");
+}
   }
 
     async function chargerAdherentComplet(idAdherent) {
@@ -727,6 +739,11 @@ function rechercheAutoAdherent() {
       return;
     }
 
+    if (results.length === 1) {
+  await chargerAdherentComplet(results[0].id_adherent);
+  return;
+}
+
     results.forEach(item => {
       const div = document.createElement("div");
       div.className = "result-item";
@@ -752,6 +769,20 @@ function rechercheAutoAdherent() {
     btn.textContent = "Rechercher";
     window.rechercheAdherentEnCours = false;
   }
+}
+
+    let timerRechercheJeu = null;
+
+function rechercheAutoJeu() {
+  clearTimeout(timerRechercheJeu);
+
+  timerRechercheJeu = setTimeout(() => {
+    const input = document.getElementById("jeuInput").value.trim();
+
+    if (input.length >= 2) {
+      rechercherJeuUnique();
+    }
+  }, 300);
 }
 
   async function rechercherJeuUnique() {
@@ -813,6 +844,11 @@ function rechercheAutoAdherent() {
         window.rechercheJeuEnCours = false;
         return;
       }
+
+      if (results.length === 1) {
+  await selectionnerJeu(results[0]);
+  return;
+}
 
       resultsBox.innerHTML = "";
 
@@ -942,9 +978,9 @@ function rechercheAutoAdherent() {
     document.getElementById("btnValiderEmprunt").classList.add("hidden");
 
     showView("viewAdherent");
-    setHeaderSubtitle("Recherche un adhérent pour commencer.");
-    setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
-  }
+setHeaderSubtitle("Recherche un adhérent pour commencer.");
+setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
+focusLater("adherentInput");
 
   async function validerEmprunt() {
     const btn = document.getElementById("btnValiderEmprunt");
@@ -1044,17 +1080,19 @@ function rechercheAutoAdherent() {
       document.getElementById("btnValiderEmprunt").classList.add("hidden");
 
       showView("viewJeu");
-      setHeaderSubtitle("Recherche un jeu à emprunter.");
-      setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
-      document.getElementById("jeuInput").focus();
+setHeaderSubtitle("Recherche un jeu à emprunter.");
+setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
+focusLater("jeuInput");
 
     } catch (error) {
       setStatus("statusSucces", "Erreur", error.message);
     }
   }
 
-  window.onload = () => {
-    chargerIndex();
+  window.onload = async () => {
+  await chargerIndex();
+  focusLater("adherentInput");
+};
   };
 </script>
   
