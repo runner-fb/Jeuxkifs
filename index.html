@@ -458,6 +458,169 @@
     </div>
   </div>
 </section>
+
+    <!-- ========================= -->
+    <!-- RETOUR ACCUEIL -->
+    <!-- ========================= -->
+    <section id="viewRetourAccueil" class="view">
+      <div class="card">
+        <h2 class="section-title">Retour de jeux</h2>
+
+        <div class="actions">
+          <button class="btn btn-primary" onclick="ouvrirRetourUnique()">Retour unique</button>
+          <button class="btn btn-primary" onclick="ouvrirRetourMultiple()">Retour multiple</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= -->
+    <!-- RETOUR UNIQUE -->
+    <!-- ========================= -->
+    <section id="viewRetourUnique" class="view">
+      <div class="card">
+        <h2 class="section-title">Retour d’un jeu</h2>
+
+        <label for="retourInput" class="label">Jeu / exemplaire</label>
+        <div class="input-row">
+          <input
+            id="retourInput"
+            class="text-input"
+            type="text"
+            placeholder="Scanne ou saisis un exemplaire, un EAN ou un nom de jeu"
+            oninput="rechercheAutoRetourUnique()"
+          />
+        </div>
+
+        <div id="retourResults" class="results hidden"></div>
+
+        <div id="retourStatus" class="status-box">
+          <strong>Prêt.</strong><br>
+          En attente d’une recherche retour.
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-warning" onclick="ouvrirRetourAccueil()">Retour</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= -->
+    <!-- RETOUR CONFIRMATION -->
+    <!-- ========================= -->
+    <section id="viewRetourConfirm" class="view">
+      <div class="card">
+        <h2 class="section-title">Confirmer le retour</h2>
+
+        <div class="infos">
+          <div class="info-item">
+            <div class="info-label">Jeu</div>
+            <div id="retourConfirmJeu" class="info-value"></div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Exemplaire</div>
+            <div id="retourConfirmExemplaire" class="info-value"></div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Adhérent</div>
+            <div id="retourConfirmAdherent" class="info-value"></div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Retard</div>
+            <div id="retourConfirmRetard" class="info-value"></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btnConfirmerRetour" class="btn btn-success" onclick="confirmerRetour()">Confirmer le retour</button>
+          <button class="btn btn-warning" onclick="retourRetourUnique()">Annuler</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= -->
+    <!-- RETOUR SUCCÈS -->
+    <!-- ========================= -->
+    <section id="viewRetourSucces" class="view">
+      <div class="card">
+        <h2 class="section-title">Retour enregistré</h2>
+
+        <div class="selected-box">
+          <strong id="retourSuccesTitre">Retour enregistré</strong>
+          <span id="retourSuccesDetail"></span>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-success" onclick="ouvrirRetourUnique()">Retourner un autre jeu</button>
+          <button class="btn btn-primary" onclick="ouvrirRetourAccueil()">Accueil</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= -->
+    <!-- RETOUR MULTIPLE -->
+    <!-- ========================= -->
+    <section id="viewRetourMultiple" class="view">
+      <div class="card">
+        <h2 class="section-title">Retour multiple</h2>
+
+        <label for="retourMultiInput" class="label">Jeu / exemplaire</label>
+        <div class="input-row">
+          <input
+            id="retourMultiInput"
+            class="text-input"
+            type="text"
+            placeholder="Scanne ou saisis un exemplaire, un EAN ou un nom de jeu"
+            oninput="rechercheAutoRetourMultiple()"
+          />
+        </div>
+
+        <div id="retourMultiResults" class="results hidden"></div>
+        <div id="retourMultiList" class="results"></div>
+
+        <div class="actions">
+          <button id="btnConfirmerTous" class="btn btn-success" onclick="confirmerTousRetours()">Confirmer tous les retours</button>
+          <button class="btn btn-warning" onclick="ouvrirRetourAccueil()">Retour</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= -->
+    <!-- CHOIX EXEMPLAIRE MULTIPLE -->
+    <!-- ========================= -->
+    <section id="viewRetourMultipleChoix" class="view">
+      <div class="card">
+        <h2 class="section-title">Choisir un exemplaire</h2>
+
+        <div id="retourMultiChoixList" class="results"></div>
+
+        <div class="actions">
+          <button class="btn btn-warning" onclick="retourRetourMultiple()">Retour</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= -->
+    <!-- SUCCÈS MULTIPLE -->
+    <!-- ========================= -->
+    <section id="viewRetourMultipleSucces" class="view">
+      <div class="card">
+        <h2 class="section-title">Retours enregistrés</h2>
+
+        <div class="selected-box">
+          <strong id="retourMultiSuccesTitre">Retours enregistrés</strong>
+          <span id="retourMultiSuccesDetail"></span>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-success" onclick="ouvrirRetourMultiple()">Recommencer</button>
+          <button class="btn btn-primary" onclick="ouvrirRetourAccueil()">Accueil</button>
+        </div>
+      </div>
+    </section>
+
   </div>
 
   <script>
@@ -1091,6 +1254,45 @@ focusLater("jeuInput");
       setStatus("statusSucces", "Erreur", error.message);
     }
   }
+
+    // ============================
+// NAVIGATION RETOUR
+// ============================
+
+function ouvrirRetourAccueil() {
+  showView("viewRetourAccueil");
+  setHeaderSubtitle("Choisis un mode de retour.");
+}
+
+function ouvrirRetourUnique() {
+  document.getElementById("retourInput").value = "";
+  document.getElementById("retourResults").innerHTML = "";
+  document.getElementById("retourResults").classList.add("hidden");
+  setStatus("retourStatus", "Prêt.", "En attente d’une recherche retour.");
+
+  showView("viewRetourUnique");
+  setHeaderSubtitle("Retour d’un jeu.");
+  focusLater("retourInput");
+}
+
+function retourRetourUnique() {
+  ouvrirRetourUnique();
+}
+
+function ouvrirRetourMultiple() {
+  document.getElementById("retourMultiInput").value = "";
+  document.getElementById("retourMultiResults").innerHTML = "";
+  document.getElementById("retourMultiResults").classList.add("hidden");
+  document.getElementById("retourMultiList").innerHTML = "";
+
+  showView("viewRetourMultiple");
+  setHeaderSubtitle("Retour multiple.");
+  focusLater("retourMultiInput");
+}
+
+function retourRetourMultiple() {
+  ouvrirRetourMultiple();
+}
 
   window.onload = async () => {
   await chargerIndex();
