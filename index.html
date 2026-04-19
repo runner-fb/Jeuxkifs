@@ -461,9 +461,21 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxvASN1BbWvvwLn2zRg_t_1GgysJaeNk2jJhQMMXHitTdrea8Ub2a3Kq-7pZpBVTMRSLQ/exec";
 
+    let adherentsIndex = [];
+    let jeuxIndex = [];
     let adherentCourant = null;
     let jeuCourant = null;
     let exemplaireChoisi = null;
+
+    async function chargerIndex() {
+  const resAdh = await fetch(API_URL + "?action=getAdherentsIndex");
+  const dataAdh = await resAdh.json();
+  adherentsIndex = dataAdh.data || [];
+
+  const resJeux = await fetch(API_URL + "?action=getJeuxIndex");
+  const dataJeux = await resJeux.json();
+  jeuxIndex = dataJeux.data || [];
+}
 
     function setHeaderSubtitle(text) {
       document.getElementById("headerSubtitle").textContent = text;
@@ -584,27 +596,24 @@
 
   const input = document.getElementById("adherentInput").value.trim();
   const resultsBox = document.getElementById("adherentResults");
-  const btn = document.getElementById("btnRechercheAdherent");
-
-  btn.disabled = true;
-  btn.textContent = "Recherche...";
+  const btn = document.getElementById("btnRechercherAdherent");
 
   resultsBox.innerHTML = "";
   resultsBox.classList.add("hidden");
 
   if (!input) {
-    setStatus("statusAdherent", "Recherche vide", "Saisis un identifiant, un nom ou un prénom.");
-    btn.disabled = false;
-    btn.textContent = "Rechercher";
+    setStatus("statusAdherent", "Erreur", "Veuillez saisir un code ou un nom.");
     window.rechercheAdherentEnCours = false;
     return;
   }
 
-  setStatus("statusAdherent", "Recherche adhérent", "Vérification en cours...");
+  btn.disabled = true;
+  btn.textContent = "Recherche...";
 
   try {
     const estUnCode = /^[0-9]+$/.test(input);
 
+    // 🔹 CAS 1 — CODE ADHÉRENT
     if (estUnCode) {
       const directUrl = API_URL
         + "?action=getAdherentByCode"
@@ -615,41 +624,42 @@
 
       if (directData.found) {
         afficherFicheAdherent(directData);
+        btn.disabled = false;
+        btn.textContent = "Rechercher";
+        window.rechercheAdherentEnCours = false;
         return;
       }
 
-      setStatus("statusAdherent", "Adhérent introuvable", "Aucun adhérent ne correspond à cet identifiant.");
+      setStatus("statusAdherent", "Introuvable", "Aucun adhérent trouvé.");
+      btn.disabled = false;
+      btn.textContent = "Rechercher";
+      window.rechercheAdherentEnCours = false;
       return;
     }
 
-    const searchUrl = API_URL
-      + "?action=searchAdherents"
-      + "&query=" + encodeURIComponent(input);
+    // 🔹 CAS 2 — RECHERCHE NOM (LOCAL)
+    const query = input.toLowerCase();
 
-    const searchResponse = await fetch(searchUrl);
-    const searchData = await searchResponse.json();
+    const results = adherentsIndex.filter(a =>
+      a.nom_complet.toLowerCase().includes(query)
+    );
 
-    if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
-      setStatus("statusAdherent", "Aucun résultat", "Aucun adhérent ne correspond à cette recherche.");
+    if (results.length === 0) {
+      setStatus("statusAdherent", "Aucun résultat", "Aucun adhérent ne correspond.");
+      btn.disabled = false;
+      btn.textContent = "Rechercher";
+      window.rechercheAdherentEnCours = false;
       return;
     }
 
-    const adherentsUniques = [];
-    const idsVus = new Set();
+    resultsBox.innerHTML = "";
 
-    searchData.results.forEach(item => {
-      if (!idsVus.has(item.id_adherent)) {
-        idsVus.add(item.id_adherent);
-        adherentsUniques.push(item);
-      }
-    });
-
-    adherentsUniques.forEach(item => {
+    results.forEach(item => {
       const div = document.createElement("div");
       div.className = "result-item";
       div.innerHTML = `
         <div class="result-main">${item.nom_complet}</div>
-        <div class="result-sub">ID : ${item.id_adherent} · Profil : ${item.profil}</div>
+        <div class="result-sub">ID : ${item.id_adherent}</div>
       `;
       div.onclick = () => {
         document.getElementById("adherentInput").value = item.id_adherent;
@@ -660,15 +670,15 @@
     });
 
     resultsBox.classList.remove("hidden");
-    setStatus("statusAdherent", "Résultats trouvés", "Choisis un adhérent dans la liste.");
+    setStatus("statusAdherent", "Résultats", "Sélectionne un adhérent.");
 
-  } catch (error) {
-    setStatus("statusAdherent", "Erreur", error.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Rechercher";
-    window.rechercheAdherentEnCours = false;
+  } catch (e) {
+    setStatus("statusAdherent", "Erreur", e.message);
   }
+
+  btn.disabled = false;
+  btn.textContent = "Rechercher";
+  window.rechercheAdherentEnCours = false;
 }
 
     async function rechercherJeuUnique() {
@@ -679,25 +689,17 @@
   const resultsBox = document.getElementById("jeuResults");
   const btn = document.getElementById("btnRechercheJeu");
 
-  btn.disabled = true;
-  btn.textContent = "Recherche...";
-
   resultsBox.innerHTML = "";
   resultsBox.classList.add("hidden");
-  document.getElementById("jeuSelection").classList.add("hidden");
-  document.getElementById("exemplairesZone").innerHTML = "";
-  document.getElementById("exemplairesBloc").classList.add("hidden");
-  exemplaireChoisi = null;
 
   if (!input) {
-    setStatus("statusJeu", "Recherche vide", "Saisis un code-barres ou un nom de jeu.");
-    btn.disabled = false;
-    btn.textContent = "Rechercher";
+    setStatus("statusJeu", "Erreur", "Veuillez saisir un code ou un nom de jeu.");
     window.rechercheJeuEnCours = false;
     return;
   }
 
-  setStatus("statusJeu", "Recherche jeu", "Vérification en cours...");
+  btn.disabled = true;
+  btn.textContent = "Recherche...";
 
   try {
     const estUnCodeBarres = /^[0-9]+$/.test(input);
@@ -712,61 +714,60 @@
 
       if (directData.found) {
         await selectionnerJeu(directData);
+        btn.disabled = false;
+        btn.textContent = "Rechercher";
+        window.rechercheJeuEnCours = false;
         return;
       }
 
-      setStatus("statusJeu", "Jeu introuvable", "Aucun jeu ne correspond à ce code-barres.");
+      setStatus("statusJeu", "Introuvable", "Aucun jeu trouvé.");
+      btn.disabled = false;
+      btn.textContent = "Rechercher";
+      window.rechercheJeuEnCours = false;
       return;
     }
 
-    const searchUrl = API_URL
-      + "?action=searchJeux"
-      + "&query=" + encodeURIComponent(input);
+    const query = input.toLowerCase();
 
-    const searchResponse = await fetch(searchUrl);
-    const searchData = await searchResponse.json();
+    const results = jeuxIndex.filter(j =>
+      j.nom_jeu.toLowerCase().includes(query)
+    );
 
-    if (!searchData.ok || !Array.isArray(searchData.results) || searchData.results.length === 0) {
-      setStatus("statusJeu", "Aucun résultat", "Aucun jeu trouvé.");
+    if (results.length === 0) {
+      setStatus("statusJeu", "Aucun résultat", "Aucun jeu ne correspond.");
+      btn.disabled = false;
+      btn.textContent = "Rechercher";
+      window.rechercheJeuEnCours = false;
       return;
     }
 
-    const jeuxUniques = [];
-    const idsVus = new Set();
+    resultsBox.innerHTML = "";
 
-    searchData.results.forEach(item => {
-      if (!idsVus.has(item.id_jeu)) {
-        idsVus.add(item.id_jeu);
-        jeuxUniques.push(item);
-      }
-    });
-
-    jeuxUniques.forEach(item => {
+    results.forEach(item => {
       const div = document.createElement("div");
       div.className = "result-item";
       div.innerHTML = `
         <div class="result-main">${item.nom_jeu}</div>
         <div class="result-sub">ID : ${item.id_jeu}</div>
       `;
-      div.onclick = async () => {
-        await selectionnerJeu(item);
+      div.onclick = () => {
+        selectionnerJeu(item);
         resultsBox.classList.add("hidden");
       };
       resultsBox.appendChild(div);
     });
 
     resultsBox.classList.remove("hidden");
-    setStatus("statusJeu", "Résultats trouvés", "Choisis un jeu dans la liste.");
+    setStatus("statusJeu", "Résultats", "Sélectionne un jeu.");
 
-  } catch (error) {
-    setStatus("statusJeu", "Erreur", error.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Rechercher";
-    window.rechercheJeuEnCours = false;
+  } catch (e) {
+    setStatus("statusJeu", "Erreur", e.message);
   }
-}
 
+  btn.disabled = false;
+  btn.textContent = "Rechercher";
+  window.rechercheJeuEnCours = false;
+}
     async function selectionnerJeu(item) {
       jeuCourant = item;
       exemplaireChoisi = null;
@@ -972,6 +973,9 @@ setStatus("statusSucces", "Succès.", "Choisis la suite.");
     setStatus("statusSucces", "Erreur", error.message);
   }
 }
+    window.onload = () => {
+  chargerIndex();
+};
   </script>
 </body>
 </html>
