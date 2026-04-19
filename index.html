@@ -295,1156 +295,373 @@
 </head>
 <body>
   <div class="app">
-    <header class="header">
-      <h1 class="title">Gestion des emprunts</h1>
-      <p class="subtitle" id="headerSubtitle">
-        Recherche un adhérent pour commencer.
-      </p>
-    </header>
 
-    <!-- VUE 1 : RECHERCHE ADHERENT -->
-    <section id="viewAdherent" class="view active">
-      <div class="card">
-        <h2 class="section-title">Rechercher un adhérent</h2>
+  <header class="header">
+    <h1 class="title">Gestion des emprunts</h1>
+    <p class="subtitle" id="headerSubtitle">
+      Recherche un adhérent pour commencer.
+    </p>
+  </header>
 
-        <label for="adherentInput" class="label">Adhérent</label>
-        <div class="input-row">
-          <input
-  id="adherentInput"
-  class="text-input"
-  type="text"
-  placeholder="Scanne ou tape nom / prénom"
-  oninput="rechercheAutoAdherent()"
-  onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherAdherentUnique();}"
-/>
-          <button id="btnRechercheAdherent" class="btn btn-primary" onclick="rechercherAdherentUnique()">
-            Rechercher
-          </button>
-        </div>
+  <!-- ========================= -->
+  <!-- RECHERCHE ADHERENT -->
+  <!-- ========================= -->
+  <section id="viewAdherent" class="view active">
+    <div class="card">
+      <h2 class="section-title">Rechercher un adhérent</h2>
 
-        <div id="adherentResults" class="results hidden"></div>
-<div class="actions">
-  <button class="btn btn-primary" onclick="ouvrirRetourAccueil()">
-    Retour de jeux
-  </button>
+      <div class="input-row">
+        <input id="adherentInput" class="text-input"
+          placeholder="Nom / prénom ou scan"
+          oninput="rechercheAutoAdherent()"
+          onkeydown="if(event.key==='Enter'){rechercherAdherentUnique();}">
+        <button class="btn btn-primary" onclick="rechercherAdherentUnique()">Rechercher</button>
+      </div>
+
+      <div id="adherentResults" class="results hidden"></div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="ouvrirRetourAccueil()">Retour de jeux</button>
+      </div>
+
+      <div id="statusAdherent" class="status-box"></div>
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- FICHE ADHERENT -->
+  <!-- ========================= -->
+  <section id="viewFiche" class="view">
+    <div class="card">
+      <h2 class="section-title">Fiche adhérent</h2>
+
+      <div id="nomComplet" class="name"></div>
+      <div id="badgeStatut" class="badge"></div>
+      <div id="motifBlocage" class="motif hidden"></div>
+
+      <div class="infos">
+        <div class="info-item"><div class="info-label">Emprunts</div><div id="empruntsEnCours"></div></div>
+        <div class="info-item"><div class="info-label">Statut</div><div id="statutEmprunt"></div></div>
+        <div class="info-item"><div class="info-label">Jeux</div><div id="jeuxEnCours"></div></div>
+        <div class="info-item"><div class="info-label">Retards</div><div id="nbRetards"></div></div>
+      </div>
+
+      <div class="actions">
+        <button id="btnChoisirJeu" class="btn btn-success hidden" onclick="ouvrirVueJeu()">Emprunter</button>
+        <button class="btn btn-warning" onclick="retourRechercheAdherent()">Changer</button>
+      </div>
+
+      <div id="statusFiche" class="status-box"></div>
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- RECHERCHE JEU -->
+  <!-- ========================= -->
+  <section id="viewJeu" class="view">
+    <div class="card">
+      <h2 class="section-title">Choisir un jeu</h2>
+
+      <div class="input-row">
+        <input id="jeuInput" class="text-input"
+          placeholder="Nom ou scan"
+          oninput="rechercheAutoJeu()"
+          onkeydown="if(event.key==='Enter'){rechercherJeuUnique();}">
+        <button class="btn btn-primary" onclick="rechercherJeuUnique()">Rechercher</button>
+      </div>
+
+      <div id="jeuResults" class="results hidden"></div>
+
+      <div id="jeuSelection" class="selected-box hidden">
+        <strong id="jeuNomSelection"></strong>
+        <span id="jeuEtatSelection"></span>
+      </div>
+
+      <div id="exemplairesBloc" class="hidden">
+        <div id="exemplairesZone" class="results"></div>
+      </div>
+
+      <div class="actions">
+        <button id="btnValiderEmprunt" class="btn btn-success hidden" onclick="validerEmprunt()">Valider</button>
+        <button class="btn btn-warning" onclick="retourFicheAdherent()">Retour</button>
+      </div>
+
+      <div id="statusJeu" class="status-box"></div>
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- RETOUR ACCUEIL -->
+  <!-- ========================= -->
+  <section id="viewRetourAccueil" class="view">
+    <div class="card">
+      <h2 class="section-title">Retour</h2>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="ouvrirRetourUnique()">Retour simple</button>
+        <button class="btn btn-primary" onclick="ouvrirRetourMultiple()">Retour multiple</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- RETOUR UNIQUE -->
+  <!-- ========================= -->
+  <section id="viewRetourUnique" class="view">
+    <div class="card">
+      <h2 class="section-title">Retour d’un jeu</h2>
+
+      <input id="retourInput" class="text-input"
+        placeholder="Nom jeu ou scan"
+        oninput="rechercheAutoRetourUnique()">
+
+      <div id="retourResults" class="results hidden"></div>
+      <div id="retourStatus" class="status-box"></div>
+
+      <div class="actions">
+        <button class="btn btn-warning" onclick="ouvrirRetourAccueil()">Retour</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- CONFIRMATION -->
+  <!-- ========================= -->
+  <section id="viewRetourConfirm" class="view">
+    <div class="card">
+      <h2 class="section-title">Confirmer</h2>
+
+      <div class="infos">
+        <div class="info-item"><div class="info-label">Jeu</div><div id="retourConfirmJeu"></div></div>
+        <div class="info-item"><div class="info-label">Exemplaire</div><div id="retourConfirmExemplaire"></div></div>
+        <div class="info-item"><div class="info-label">Adhérent</div><div id="retourConfirmAdherent"></div></div>
+        <div class="info-item"><div class="info-label">Retard</div><div id="retourConfirmRetard"></div></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-success" onclick="confirmerRetour()">Confirmer</button>
+        <button class="btn btn-warning" onclick="ouvrirRetourUnique()">Annuler</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- SUCCES -->
+  <!-- ========================= -->
+  <section id="viewRetourSucces" class="view">
+    <div class="card">
+      <h2 class="section-title">Retour effectué</h2>
+
+      <div id="retourSuccesDetail" class="selected-box"></div>
+
+      <div class="actions">
+        <button class="btn btn-success" onclick="ouvrirRetourUnique()">Autre retour</button>
+        <button class="btn btn-primary" onclick="ouvrirRetourAccueil()">Accueil</button>
+      </div>
+    </div>
+  </section>
+
 </div>
-        <div id="statusAdherent" class="status-box">
-          <strong>Prêt.</strong><br>
-          En attente d’une recherche adhérent.
-        </div>
-      </div>
-    </section>
-
-    <!-- VUE 2 : FICHE ADHERENT -->
-    <section id="viewFiche" class="view">
-      <div class="card">
-        <h2 class="section-title">Fiche adhérent</h2>
-
-        <div id="nomComplet" class="name"></div>
-        <div id="badgeStatut" class="badge"></div>
-
-        <div id="motifBlocage" class="motif hidden"></div>
-
-        <div class="infos">
-          <div class="info-item">
-            <div class="info-label">Emprunts en cours</div>
-            <div id="empruntsEnCours" class="info-value"></div>
-          </div>
-
-          <div class="info-item">
-            <div class="info-label">Statut emprunt</div>
-            <div id="statutEmprunt" class="info-value"></div>
-          </div>
-
-          <div class="info-item">
-            <div class="info-label">Jeux en cours</div>
-            <div id="jeuxEnCours" class="info-value"></div>
-          </div>
-
-          <div class="info-item">
-            <div class="info-label">Nombre de retards</div>
-            <div id="nbRetards" class="info-value"></div>
-          </div>
-
-          <div class="info-item">
-            <div class="info-label">Profil</div>
-            <div id="profil" class="info-value"></div>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button id="btnChoisirJeu" class="btn btn-success hidden" onclick="ouvrirVueJeu()">
-            Emprunter un jeu
-          </button>
-
-          <button class="btn btn-warning" onclick="retourRechercheAdherent()">
-            Changer d’adhérent
-          </button>
-        </div>
-
-        <div id="statusFiche" class="status-box">
-          <strong>Fiche chargée.</strong><br>
-          Vérifie les informations avant de continuer.
-        </div>
-      </div>
-    </section>
-
-    <!-- VUE 3 : RECHERCHE JEU -->
-    <section id="viewJeu" class="view">
-      <div class="card">
-        <h2 class="section-title">Choisir un jeu</h2>
-
-        <label for="jeuInput" class="label">Jeu</label>
-        <div class="input-row">
-         <input
-  id="jeuInput"
-  class="text-input"
-  type="text"
-  placeholder="Scanne ou tape un nom de jeu"
-  oninput="rechercheAutoJeu()"
-  onkeydown="if(event.key === 'Enter'){event.preventDefault(); rechercherJeuUnique();}"
-/>
-          <button id="btnRechercheJeu" class="btn btn-primary" onclick="rechercherJeuUnique()">
-            Rechercher
-          </button>
-        </div>
-
-        <div id="jeuResults" class="results hidden"></div>
-
-        <div id="jeuSelection" class="selected-box hidden">
-          <strong id="jeuNomSelection"></strong>
-          <span id="jeuEtatSelection"></span>
-        </div>
-
-        <div id="exemplairesBloc" class="hidden">
-          <label class="label" style="margin-top:14px;">Exemplaires disponibles</label>
-          <div id="exemplairesZone" class="results"></div>
-        </div>
-
-        <div class="actions">
-  <button id="btnValiderEmprunt" class="btn btn-success hidden" onclick="validerEmprunt()">
-    Valider l’emprunt
-  </button>
-
-  <button class="btn btn-warning" onclick="retourFicheAdherent()">
-    Retour à la fiche
-  </button>
-</div>
-
-        <div id="statusJeu" class="status-box">
-          <strong>Prêt.</strong><br>
-          En attente d’une recherche jeu.
-        </div>
-      </div>
-    </section>
-    <section id="viewSucces" class="view">
-  <div class="card">
-    <h2 class="section-title">Emprunt enregistré</h2>
-
-    <div class="selected-box">
-      <strong id="successTitre">Emprunt enregistré</strong>
-      <span id="successDetail"></span>
-    </div>
-
-    <div class="actions">
-      <button class="btn btn-success" onclick="emprunterAutreJeu()">
-        Emprunter un autre jeu
-      </button>
-
-      <button class="btn btn-primary" onclick="reinitialiserTout()">
-        Nouvel adhérent
-      </button>
-    </div>
-
-    <div id="statusSucces" class="status-box">
-      <strong>Succès.</strong><br>
-      L’emprunt a bien été enregistré.
-    </div>
-  </div>
-</section>
-
-    <!-- ========================= -->
-    <!-- RETOUR ACCUEIL -->
-    <!-- ========================= -->
-    <section id="viewRetourAccueil" class="view">
-      <div class="card">
-        <h2 class="section-title">Retour de jeux</h2>
-
-        <div class="actions">
-          <button class="btn btn-primary" onclick="ouvrirRetourUnique()">Retour unique</button>
-          <button class="btn btn-primary" onclick="ouvrirRetourMultiple()">Retour multiple</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================= -->
-    <!-- RETOUR UNIQUE -->
-    <!-- ========================= -->
-    <section id="viewRetourUnique" class="view">
-      <div class="card">
-        <h2 class="section-title">Retour d’un jeu</h2>
-
-        <label for="retourInput" class="label">Jeu / exemplaire</label>
-        <div class="input-row">
-          <input
-            id="retourInput"
-            class="text-input"
-            type="text"
-            placeholder="Scanne ou saisis un exemplaire, un EAN ou un nom de jeu"
-            oninput="rechercheAutoRetourUnique()"
-          />
-        </div>
-
-        <div id="retourResults" class="results hidden"></div>
-
-        <div id="retourStatus" class="status-box">
-          <strong>Prêt.</strong><br>
-          En attente d’une recherche retour.
-        </div>
-
-        <div class="actions">
-          <button class="btn btn-warning" onclick="ouvrirRetourAccueil()">Retour</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================= -->
-    <!-- RETOUR CONFIRMATION -->
-    <!-- ========================= -->
-    <section id="viewRetourConfirm" class="view">
-      <div class="card">
-        <h2 class="section-title">Confirmer le retour</h2>
-
-        <div class="infos">
-          <div class="info-item">
-            <div class="info-label">Jeu</div>
-            <div id="retourConfirmJeu" class="info-value"></div>
-          </div>
-
-          <div class="info-item">
-            <div class="info-label">Exemplaire</div>
-            <div id="retourConfirmExemplaire" class="info-value"></div>
-          </div>
-
-          <div class="info-item">
-            <div class="info-label">Adhérent</div>
-            <div id="retourConfirmAdherent" class="info-value"></div>
-          </div>
-
-          <div class="info-item">
-            <div class="info-label">Retard</div>
-            <div id="retourConfirmRetard" class="info-value"></div>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button id="btnConfirmerRetour" class="btn btn-success" onclick="confirmerRetour()">Confirmer le retour</button>
-          <button class="btn btn-warning" onclick="retourRetourUnique()">Annuler</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================= -->
-    <!-- RETOUR SUCCÈS -->
-    <!-- ========================= -->
-    <section id="viewRetourSucces" class="view">
-      <div class="card">
-        <h2 class="section-title">Retour enregistré</h2>
-
-        <div class="selected-box">
-          <strong id="retourSuccesTitre">Retour enregistré</strong>
-          <span id="retourSuccesDetail"></span>
-        </div>
-
-        <div class="actions">
-          <button class="btn btn-success" onclick="ouvrirRetourUnique()">Retourner un autre jeu</button>
-          <button class="btn btn-primary" onclick="ouvrirRetourAccueil()">Accueil</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================= -->
-    <!-- RETOUR MULTIPLE -->
-    <!-- ========================= -->
-    <section id="viewRetourMultiple" class="view">
-      <div class="card">
-        <h2 class="section-title">Retour multiple</h2>
-
-        <label for="retourMultiInput" class="label">Jeu / exemplaire</label>
-        <div class="input-row">
-          <input
-            id="retourMultiInput"
-            class="text-input"
-            type="text"
-            placeholder="Scanne ou saisis un exemplaire, un EAN ou un nom de jeu"
-            oninput="rechercheAutoRetourMultiple()"
-          />
-        </div>
-
-        <div id="retourMultiResults" class="results hidden"></div>
-        <div id="retourMultiList" class="results"></div>
-
-        <div class="actions">
-          <button id="btnConfirmerTous" class="btn btn-success" onclick="confirmerTousRetours()">Confirmer tous les retours</button>
-          <button class="btn btn-warning" onclick="ouvrirRetourAccueil()">Retour</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================= -->
-    <!-- CHOIX EXEMPLAIRE MULTIPLE -->
-    <!-- ========================= -->
-    <section id="viewRetourMultipleChoix" class="view">
-      <div class="card">
-        <h2 class="section-title">Choisir un exemplaire</h2>
-
-        <div id="retourMultiChoixList" class="results"></div>
-
-        <div class="actions">
-          <button class="btn btn-warning" onclick="retourRetourMultiple()">Retour</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================= -->
-    <!-- SUCCÈS MULTIPLE -->
-    <!-- ========================= -->
-    <section id="viewRetourMultipleSucces" class="view">
-      <div class="card">
-        <h2 class="section-title">Retours enregistrés</h2>
-
-        <div class="selected-box">
-          <strong id="retourMultiSuccesTitre">Retours enregistrés</strong>
-          <span id="retourMultiSuccesDetail"></span>
-        </div>
-
-        <div class="actions">
-          <button class="btn btn-success" onclick="ouvrirRetourMultiple()">Recommencer</button>
-          <button class="btn btn-primary" onclick="ouvrirRetourAccueil()">Accueil</button>
-        </div>
-      </div>
-    </section>
-
-  </div>
 
   <script>
   const API_URL = "https://script.google.com/macros/s/AKfycbxvASN1BbWvvwLn2zRg_t_1GgysJaeNk2jJhQMMXHitTdrea8Ub2a3Kq-7pZpBVTMRSLQ/exec";
 
-  let adherentsIndex = [];
-  let jeuxIndex = [];
-  let adherentCourant = null;
-  let jeuCourant = null;
-  let exemplaireChoisi = null;
-    let retourCourant = null;
+let adherentsIndex = [];
+let jeuxIndex = [];
+
+let adherentCourant = null;
+let jeuCourant = null;
+let exemplaireChoisi = null;
+
+let retourCourant = null;
 let timerRetourUnique = null;
 
-  async function chargerIndex() {
-  try {
-    setStatus("statusAdherent", "Chargement", "Chargement des données...");
 
+// ============================
+// INIT
+// ============================
+
+async function chargerIndex() {
+  try {
     const resAdh = await fetch(API_URL + "?action=getAdherentsIndex");
-    const dataAdh = await resAdh.json();
-    adherentsIndex = dataAdh.data || [];
+    adherentsIndex = (await resAdh.json()).data || [];
 
     const resJeux = await fetch(API_URL + "?action=getJeuxIndex");
-    const dataJeux = await resJeux.json();
-    jeuxIndex = dataJeux.data || [];
+    jeuxIndex = (await resJeux.json()).data || [];
 
-    console.log("INDEX ADHERENTS :", adherentsIndex.length, adherentsIndex.slice(0, 5));
-    console.log("INDEX JEUX :", jeuxIndex.length, jeuxIndex.slice(0, 5));
-
-    setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
   } catch (e) {
-    console.error("ERREUR CHARGEMENT INDEX :", e);
-    setStatus("statusAdherent", "Erreur", "Impossible de charger les index.");
+    console.error(e);
   }
 }
 
-  function setHeaderSubtitle(text) {
-    document.getElementById("headerSubtitle").textContent = text;
-  }
 
-  function showView(viewId) {
-    document.querySelectorAll(".view").forEach(view => {
-      view.classList.remove("active");
-    });
-    document.getElementById(viewId).classList.add("active");
-  }
+// ============================
+// UI
+// ============================
 
-  function setStatus(boxId, title, text) {
-    const box = document.getElementById(boxId);
-    box.innerHTML = "<strong>" + title + "</strong><br>" + text;
-  }
-
-    function focusLater(elementId) {
-  setTimeout(() => {
-    const el = document.getElementById(elementId);
-    if (el) {
-      el.focus();
-      if (typeof el.select === "function" && el.tagName === "INPUT") {
-        el.select();
-      }
-    }
-  }, 50);
+function setStatus(id, title, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = "<strong>" + title + "</strong><br>" + text;
 }
 
-  function retourRechercheAdherent() {
-    adherentCourant = null;
-    jeuCourant = null;
-    exemplaireChoisi = null;
-
-    document.getElementById("adherentResults").innerHTML = "";
-    document.getElementById("adherentResults").classList.add("hidden");
-    document.getElementById("adherentInput").value = "";
-
-    document.getElementById("jeuResults").innerHTML = "";
-    document.getElementById("jeuResults").classList.add("hidden");
-    document.getElementById("jeuInput").value = "";
-    document.getElementById("jeuSelection").classList.add("hidden");
-    document.getElementById("jeuNomSelection").textContent = "";
-    document.getElementById("jeuEtatSelection").textContent = "";
-    document.getElementById("exemplairesZone").innerHTML = "";
-    document.getElementById("exemplairesBloc").classList.add("hidden");
-    document.getElementById("btnValiderEmprunt").classList.add("hidden");
-
-    showView("viewAdherent");
-setHeaderSubtitle("Recherche un adhérent pour commencer.");
-setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
-focusLater("adherentInput");
-  }
-    
-  function retourFicheAdherent() {
-    jeuCourant = null;
-    exemplaireChoisi = null;
-
-    document.getElementById("jeuInput").value = "";
-    document.getElementById("jeuResults").innerHTML = "";
-    document.getElementById("jeuResults").classList.add("hidden");
-    document.getElementById("jeuSelection").classList.add("hidden");
-    document.getElementById("jeuNomSelection").textContent = "";
-    document.getElementById("jeuEtatSelection").textContent = "";
-    document.getElementById("exemplairesZone").innerHTML = "";
-    document.getElementById("exemplairesBloc").classList.add("hidden");
-    document.getElementById("btnValiderEmprunt").classList.add("hidden");
-
-    showView("viewFiche");
-    setHeaderSubtitle("Consulte la fiche de l’adhérent.");
-    setStatus("statusFiche", "Fiche chargée.", "Vérifie les informations avant de continuer.");
-  }
-
-  function ouvrirVueJeu() {
-    jeuCourant = null;
-    exemplaireChoisi = null;
-
-    document.getElementById("jeuInput").value = "";
-    document.getElementById("jeuResults").innerHTML = "";
-    document.getElementById("jeuResults").classList.add("hidden");
-    document.getElementById("jeuSelection").classList.add("hidden");
-    document.getElementById("jeuNomSelection").textContent = "";
-    document.getElementById("jeuEtatSelection").textContent = "";
-    document.getElementById("exemplairesZone").innerHTML = "";
-    document.getElementById("exemplairesBloc").classList.add("hidden");
-    document.getElementById("btnValiderEmprunt").classList.add("hidden");
-
-    showView("viewJeu");
-setHeaderSubtitle("Recherche un jeu à emprunter.");
-setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
-focusLater("jeuInput");
-  }
-    
-  function afficherFicheAdherent(data) {
-    adherentCourant = data;
-
-    document.getElementById("nomComplet").textContent = data.nom_complet || "";
-
-    const badge = document.getElementById("badgeStatut");
-    const peutEmprunter = String(data.peut_emprunter || "").toLowerCase() === "oui";
-
-    badge.textContent = peutEmprunter ? "Peut emprunter" : "Emprunt impossible";
-    badge.className = "badge " + (peutEmprunter ? "badge-ok" : "badge-ko");
-
-    const motifBox = document.getElementById("motifBlocage");
-    if (!peutEmprunter && data.motif_blocage) {
-      motifBox.textContent = data.motif_blocage;
-      motifBox.classList.remove("hidden");
-    } else {
-      motifBox.textContent = "";
-      motifBox.classList.add("hidden");
-    }
-
-    document.getElementById("empruntsEnCours").textContent = data.emprunts_en_cours ?? "";
-    document.getElementById("statutEmprunt").textContent = data.statut_emprunt || "";
-    document.getElementById("jeuxEnCours").textContent = data.jeux_en_cours || "";
-    document.getElementById("nbRetards").textContent = data.nb_retards ?? "";
-    document.getElementById("profil").textContent = data.profil || "";
-
-    const btnChoisirJeu = document.getElementById("btnChoisirJeu");
-    if (peutEmprunter) {
-      btnChoisirJeu.classList.remove("hidden");
-    } else {
-      btnChoisirJeu.classList.add("hidden");
-    }
-
-    showView("viewFiche");
-    setHeaderSubtitle("Consulte la fiche de l’adhérent.");
-
-    if (peutEmprunter) {
-  setStatus("statusFiche", "Adhérent autorisé", "Tu peux passer au choix du jeu.");
-  focusLater("btnChoisirJeu");
-} else {
-  setStatus("statusFiche", "Adhérent bloqué", data.motif_blocage || "Emprunt impossible.");
-}
-  }
-
-    async function chargerAdherentComplet(idAdherent) {
-  const url = API_URL
-    + "?action=getAdherentByCode"
-    + "&code=" + encodeURIComponent(idAdherent);
-
-  const response = await fetch(url);
-  const data = await response.json();
-
-  if (!data.found) {
-    setStatus("statusAdherent", "Introuvable", "Impossible de charger la fiche complète.");
-    return;
-  }
-
-  afficherFicheAdherent(data);
+function showView(viewId) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById(viewId).classList.add("active");
 }
 
-let timerRechercheAdherent = null;
 
-function rechercheAutoAdherent() {
-  clearTimeout(timerRechercheAdherent);
-
-  timerRechercheAdherent = setTimeout(() => {
-    const input = document.getElementById("adherentInput").value.trim();
-
-    if (input.length >= 2) {
-      rechercherAdherentUnique();
-    }
-  }, 300);
-}
-    
-  async function rechercherAdherentUnique() {
-  if (window.rechercheAdherentEnCours) return;
-  window.rechercheAdherentEnCours = true;
-
-  if (adherentsIndex.length === 0) {
-    setStatus("statusAdherent", "Chargement", "Les données adhérents ne sont pas encore prêtes.");
-    window.rechercheAdherentEnCours = false;
-    return;
-  }
-
-  const input = document.getElementById("adherentInput").value.trim();
-  const resultsBox = document.getElementById("adherentResults");
-  const btn = document.getElementById("btnRechercheAdherent");
-
-  resultsBox.innerHTML = "";
-  resultsBox.classList.add("hidden");
-
-  if (!input) {
-    setStatus("statusAdherent", "Erreur", "Veuillez saisir un code ou un nom.");
-    window.rechercheAdherentEnCours = false;
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = "Recherche...";
-
-  try {
-    const estUnCode = /^[0-9]+$/.test(input);
-
-    if (estUnCode) {
-      const directUrl = API_URL
-        + "?action=getAdherentByCode"
-        + "&code=" + encodeURIComponent(input);
-
-      const directResponse = await fetch(directUrl);
-      const directData = await directResponse.json();
-
-      if (directData.found) {
-        afficherFicheAdherent(directData);
-        return;
-      }
-
-      setStatus("statusAdherent", "Introuvable", "Aucun adhérent trouvé.");
-      return;
-    }
-
-    const query = input
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-
-    const results = adherentsIndex.filter(a => {
-      const nom = String(a.nom || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-
-      const prenom = String(a.prenom || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-
-      const nomComplet = String(a.nom_complet || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
-
-      const nomInverse = (nom + " " + prenom).trim();
-
-      return (
-        nom.includes(query) ||
-        prenom.includes(query) ||
-        nomComplet.includes(query) ||
-        nomInverse.includes(query)
-      );
-    });
-
-    console.log("RECHERCHE ADHERENT :", input, "=>", results.length, results);
-
-    if (results.length === 0) {
-      setStatus("statusAdherent", "Aucun résultat", "Aucun adhérent ne correspond.");
-      return;
-    }
-
-    if (results.length === 1) {
-  await chargerAdherentComplet(results[0].id_adherent);
-  return;
-}
-
-    results.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "result-item";
-      div.innerHTML = `
-        <div class="result-main">${item.nom_complet}</div>
-        <div class="result-sub">ID : ${item.id_adherent}</div>
-      `;
-      div.onclick = async () => {
-        document.getElementById("adherentInput").value = item.id_adherent;
-        resultsBox.classList.add("hidden");
-        await chargerAdherentComplet(item.id_adherent);
-      };
-      resultsBox.appendChild(div);
-    });
-
-    resultsBox.classList.remove("hidden");
-    setStatus("statusAdherent", "Résultats", "Sélectionne un adhérent.");
-  } catch (e) {
-    console.error("ERREUR RECHERCHE ADHERENT :", e);
-    setStatus("statusAdherent", "Erreur", e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Rechercher";
-    window.rechercheAdherentEnCours = false;
-  }
-}
-
-    let timerRechercheJeu = null;
-
-function rechercheAutoJeu() {
-  clearTimeout(timerRechercheJeu);
-
-  timerRechercheJeu = setTimeout(() => {
-    const input = document.getElementById("jeuInput").value.trim();
-
-    if (input.length >= 2) {
-      rechercherJeuUnique();
-    }
-  }, 300);
-}
+// ============================
+// RETOUR UNIQUE
+// ============================
 
 function rechercheAutoRetourUnique() {
   clearTimeout(timerRetourUnique);
 
   timerRetourUnique = setTimeout(() => {
     const input = document.getElementById("retourInput").value.trim();
-
-    if (input.length >= 2) {
-      rechercherRetourUnique();
-    }
+    if (input.length >= 2) rechercherRetourUnique();
   }, 300);
 }
 
-    
-    
-  async function rechercherJeuUnique() {
-    if (window.rechercheJeuEnCours) return;
-    window.rechercheJeuEnCours = true;
-
-    const input = document.getElementById("jeuInput").value.trim();
-    const resultsBox = document.getElementById("jeuResults");
-    const btn = document.getElementById("btnRechercheJeu");
-
-    resultsBox.innerHTML = "";
-    resultsBox.classList.add("hidden");
-
-    if (!input) {
-      setStatus("statusJeu", "Erreur", "Veuillez saisir un code ou un nom de jeu.");
-      window.rechercheJeuEnCours = false;
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = "Recherche...";
-
-    try {
-      const estUnCodeBarres = /^[0-9]+$/.test(input);
-
-      if (estUnCodeBarres) {
-        const directUrl = API_URL
-          + "?action=getJeuByEAN"
-          + "&ean=" + encodeURIComponent(input);
-
-        const directResponse = await fetch(directUrl);
-        const directData = await directResponse.json();
-
-        if (directData.found) {
-          await selectionnerJeu(directData);
-          btn.disabled = false;
-          btn.textContent = "Rechercher";
-          window.rechercheJeuEnCours = false;
-          return;
-        }
-
-        setStatus("statusJeu", "Introuvable", "Aucun jeu trouvé.");
-        btn.disabled = false;
-        btn.textContent = "Rechercher";
-        window.rechercheJeuEnCours = false;
-        return;
-      }
-
-      const query = input.toLowerCase();
-
-      const results = jeuxIndex.filter(j =>
-        j.nom_jeu.toLowerCase().includes(query)
-      );
-
-      if (results.length === 0) {
-        setStatus("statusJeu", "Aucun résultat", "Aucun jeu ne correspond.");
-        btn.disabled = false;
-        btn.textContent = "Rechercher";
-        window.rechercheJeuEnCours = false;
-        return;
-      }
-
-      if (results.length === 1) {
-  await selectionnerJeu(results[0]);
-  return;
-}
-
-      resultsBox.innerHTML = "";
-
-      results.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "result-item";
-        div.innerHTML = `
-          <div class="result-main">${item.nom_jeu}</div>
-          <div class="result-sub">ID : ${item.id_jeu}</div>
-        `;
-        div.onclick = () => {
-          selectionnerJeu(item);
-          resultsBox.classList.add("hidden");
-        };
-        resultsBox.appendChild(div);
-      });
-
-      resultsBox.classList.remove("hidden");
-      setStatus("statusJeu", "Résultats", "Sélectionne un jeu.");
-
-    } catch (e) {
-      setStatus("statusJeu", "Erreur", e.message);
-    }
-
-    btn.disabled = false;
-    btn.textContent = "Rechercher";
-    window.rechercheJeuEnCours = false;
-  }
-
-  async function selectionnerJeu(item) {
-    jeuCourant = item;
-    exemplaireChoisi = null;
-
-    document.getElementById("jeuSelection").classList.remove("hidden");
-    document.getElementById("jeuNomSelection").textContent = item.nom_jeu || "";
-
-    if (!item.empruntable && !item.emprunt_autorise) {
-      document.getElementById("jeuEtatSelection").textContent = "Jeu désactivé.";
-      setStatus("statusJeu", "Jeu non empruntable", "Ce jeu est désactivé.");
-      document.getElementById("exemplairesZone").innerHTML = "";
-      document.getElementById("exemplairesBloc").classList.add("hidden");
-      document.getElementById("btnValiderEmprunt").classList.add("hidden");
-      return;
-    }
-
-    document.getElementById("jeuEtatSelection").textContent = "Jeu trouvé. Vérification de la disponibilité...";
-    await chargerExemplaires(item.id_jeu);
-  }
-
-  async function chargerExemplaires(idJeu) {
-    setStatus("statusJeu", "Recherche exemplaires", "Chargement...");
-
-    try {
-      const url = API_URL
-        + "?action=getExemplairesDisponiblesByJeu"
-        + "&id_jeu=" + encodeURIComponent(idJeu);
-
-      const response = await fetch(url);
-      const data = await response.json();
-
-      const zone = document.getElementById("exemplairesZone");
-      const bloc = document.getElementById("exemplairesBloc");
-      zone.innerHTML = "";
-
-      if (!data.exemplaires_disponibles || data.exemplaires_disponibles.length === 0) {
-        document.getElementById("jeuEtatSelection").textContent = "Jeu non disponible actuellement.";
-        setStatus("statusJeu", "Aucun exemplaire", "Actuellement empruntés.");
-        bloc.classList.add("hidden");
-        document.getElementById("btnValiderEmprunt").classList.add("hidden");
-        return;
-      }
-
-      if (data.exemplaires_disponibles.length === 1) {
-        const ex = data.exemplaires_disponibles[0];
-        exemplaireChoisi = ex.id_exemplaire;
-        bloc.classList.add("hidden");
-        document.getElementById("btnValiderEmprunt").classList.remove("hidden");
-        document.getElementById("jeuEtatSelection").textContent = "Jeu disponible.";
-        setStatus("statusJeu", "Exemplaire sélectionné", "Un seul exemplaire disponible → sélection automatique.");
-        return;
-      }
-
-      data.exemplaires_disponibles.forEach(ex => {
-        const div = document.createElement("div");
-        div.className = "result-item";
-        div.innerHTML = `
-          <div class="result-main">Exemplaire n°${ex.numero}</div>
-          <div class="result-sub">Cliquer pour sélectionner</div>
-        `;
-        div.onclick = () => {
-          exemplaireChoisi = ex.id_exemplaire;
-          document.getElementById("btnValiderEmprunt").classList.remove("hidden");
-          setStatus("statusJeu", "Exemplaire sélectionné", "Exemplaire n°" + ex.numero + " sélectionné.");
-        };
-        zone.appendChild(div);
-      });
-
-      document.getElementById("jeuEtatSelection").textContent = data.exemplaires_disponibles.length + " exemplaires disponibles.";
-      bloc.classList.remove("hidden");
-      setStatus("statusJeu", "Choix exemplaire", "Choisis un exemplaire disponible.");
-
-    } catch (error) {
-      setStatus("statusJeu", "Erreur", error.message);
-    }
-  }
-
-  function reinitialiserTout() {
-    adherentCourant = null;
-    jeuCourant = null;
-    exemplaireChoisi = null;
-
-    document.getElementById("adherentInput").value = "";
-    document.getElementById("jeuInput").value = "";
-
-    document.getElementById("adherentResults").innerHTML = "";
-    document.getElementById("adherentResults").classList.add("hidden");
-
-    document.getElementById("jeuResults").innerHTML = "";
-    document.getElementById("jeuResults").classList.add("hidden");
-
-    document.getElementById("jeuSelection").classList.add("hidden");
-    document.getElementById("jeuNomSelection").textContent = "";
-    document.getElementById("jeuEtatSelection").textContent = "";
-
-    document.getElementById("exemplairesZone").innerHTML = "";
-    document.getElementById("exemplairesBloc").classList.add("hidden");
-    document.getElementById("btnValiderEmprunt").classList.add("hidden");
-
-    showView("viewAdherent");
-setHeaderSubtitle("Recherche un adhérent pour commencer.");
-setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
-focusLater("adherentInput");
-  }
-    
-  async function validerEmprunt() {
-    const btn = document.getElementById("btnValiderEmprunt");
-
-    if (!adherentCourant) {
-      setStatus("statusJeu", "Adhérent manquant", "Aucun adhérent sélectionné.");
-      return;
-    }
-
-    if (!jeuCourant) {
-      setStatus("statusJeu", "Jeu manquant", "Aucun jeu sélectionné.");
-      return;
-    }
-
-    if (!exemplaireChoisi) {
-      setStatus("statusJeu", "Exemplaire manquant", "Choisis un exemplaire avant de valider.");
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = "Validation...";
-
-    try {
-      const url = API_URL
-        + "?action=createEmprunt"
-        + "&id_adherent=" + encodeURIComponent(adherentCourant.id_adherent)
-        + "&id_exemplaire=" + encodeURIComponent(exemplaireChoisi);
-
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (!data.ok) {
-        setStatus("statusJeu", "Échec", data.message || "Impossible d’enregistrer l’emprunt.");
-        return;
-      }
-
-      const nomAdherent = adherentCourant.nom_complet || "";
-      const nomJeu = jeuCourant?.nom_jeu || "";
-      const idEx = exemplaireChoisi || "";
-
-      document.getElementById("successTitre").textContent = "Emprunt enregistré";
-      document.getElementById("successDetail").textContent =
-        nomAdherent + " a emprunté " + nomJeu + " (" + idEx + ").";
-
-      showView("viewSucces");
-      setHeaderSubtitle("Emprunt enregistré.");
-      setStatus("statusSucces", "Succès.", "Choisis la suite.");
-
-    } catch (error) {
-      setStatus("statusJeu", "Erreur", error.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Valider l’emprunt";
-    }
-  }
-
-  async function emprunterAutreJeu() {
-    if (!adherentCourant || !adherentCourant.id_adherent) {
-      reinitialiserTout();
-      return;
-    }
-
-    setStatus("statusSucces", "Vérification", "Actualisation de la fiche adhérent...");
-
-    try {
-      const url = API_URL
-        + "?action=getAdherentByCode"
-        + "&code=" + encodeURIComponent(adherentCourant.id_adherent);
-
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (!data.found) {
-        reinitialiserTout();
-        return;
-      }
-
-      adherentCourant = data;
-
-      if (String(data.peut_emprunter || "").toLowerCase() !== "oui") {
-        afficherFicheAdherent(data);
-        setStatus("statusFiche", "Adhérent bloqué", data.motif_blocage || "Emprunt impossible.");
-        return;
-      }
-
-      jeuCourant = null;
-      exemplaireChoisi = null;
-
-      document.getElementById("jeuInput").value = "";
-      document.getElementById("jeuResults").innerHTML = "";
-      document.getElementById("jeuResults").classList.add("hidden");
-      document.getElementById("jeuSelection").classList.add("hidden");
-      document.getElementById("jeuNomSelection").textContent = "";
-      document.getElementById("jeuEtatSelection").textContent = "";
-      document.getElementById("exemplairesZone").innerHTML = "";
-      document.getElementById("exemplairesBloc").classList.add("hidden");
-      document.getElementById("btnValiderEmprunt").classList.add("hidden");
-
-      showView("viewJeu");
-setHeaderSubtitle("Recherche un jeu à emprunter.");
-setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
-focusLater("jeuInput");
-
-    } catch (error) {
-      setStatus("statusSucces", "Erreur", error.message);
-    }
-  }
-
-    // ============================
-// NAVIGATION RETOUR
-// ============================
-
-function ouvrirRetourAccueil() {
-  showView("viewRetourAccueil");
-  setHeaderSubtitle("Choisis un mode de retour.");
-}
-
-function ouvrirRetourUnique() {
-  document.getElementById("retourInput").value = "";
-  document.getElementById("retourResults").innerHTML = "";
-  document.getElementById("retourResults").classList.add("hidden");
-  setStatus("retourStatus", "Prêt.", "En attente d’une recherche retour.");
-
-  showView("viewRetourUnique");
-  setHeaderSubtitle("Retour d’un jeu.");
-  focusLater("retourInput");
-}
-
-function retourRetourUnique() {
-  ouvrirRetourUnique();
-}
-
-function ouvrirRetourMultiple() {
-  document.getElementById("retourMultiInput").value = "";
-  document.getElementById("retourMultiResults").innerHTML = "";
-  document.getElementById("retourMultiResults").classList.add("hidden");
-  document.getElementById("retourMultiList").innerHTML = "";
-
-  showView("viewRetourMultiple");
-  setHeaderSubtitle("Retour multiple.");
-  focusLater("retourMultiInput");
-}
-
-function retourRetourMultiple() {
-  ouvrirRetourMultiple();
-}
-
-// ============================
-// RETOUR UNIQUE - LOGIQUE
-// ============================
 
 async function rechercherRetourUnique() {
   const input = document.getElementById("retourInput").value.trim();
 
   if (!input) {
-    setStatus("retourStatus", "Erreur", "Saisis un code ou un nom.");
+    setStatus("retourStatus", "Erreur", "Saisis une valeur.");
     return;
   }
 
-  setStatus("retourStatus", "Recherche", "Analyse...");
+  setStatus("retourStatus", "Recherche", "...");
 
-  try {
-    // ===== CAS EXEMPLAIRE (ex: 2181-1)
-    if (input.includes("-")) {
-      await traiterRetourExemplaire(input);
-      return;
-    }
-
-    // ===== CAS CODE BARRES
-    if (/^[0-9]+$/.test(input)) {
-      const url = API_URL + "?action=getJeuByEAN&ean=" + encodeURIComponent(input);
-      const res = await fetch(url);
-      const data = await res.json();
-
-      if (data.found) {
-        setStatus("retourStatus", "Info", "Jeu détecté (gestion bientôt)");
-        return;
-      }
-    }
-
-    // ===== CAS NOM JEU
-    const query = input.toLowerCase();
-
-    const results = jeuxIndex.filter(j =>
-      j.nom_jeu.toLowerCase().includes(query)
-    );
-
-    if (results.length === 0) {
-      setStatus("retourStatus", "Aucun résultat", "Aucun jeu trouvé.");
-      return;
-    }
-
-    if (results.length === 1) {
-      setStatus("retourStatus", "Info", "1 jeu trouvé (suite bientôt)");
-      return;
-    }
-
-    setStatus("retourStatus", "Résultats", "Affine la recherche.");
-
-  } catch (e) {
-    setStatus("retourStatus", "Erreur", e.message);
+  // ========= CAS EXEMPLAIRE =========
+  if (input.includes("-")) {
+    traiterRetourExemplaire(input);
+    return;
   }
+
+  // ========= CAS NOM =========
+  const query = input.toLowerCase();
+
+  const results = jeuxIndex.filter(j =>
+    j.nom_jeu.toLowerCase().includes(query)
+  );
+
+  if (results.length === 0) {
+    setStatus("retourStatus", "Aucun résultat", "Aucun jeu.");
+    return;
+  }
+
+  if (results.length === 1) {
+    chargerEmpruntsJeu(results[0].id_jeu);
+    return;
+  }
+
+  const box = document.getElementById("retourResults");
+  box.innerHTML = "";
+
+  results.forEach(j => {
+    const div = document.createElement("div");
+    div.className = "result-item";
+    div.textContent = j.nom_jeu;
+
+    div.onclick = () => {
+      chargerEmpruntsJeu(j.id_jeu);
+      box.classList.add("hidden");
+    };
+
+    box.appendChild(div);
+  });
+
+  box.classList.remove("hidden");
 }
 
 
 // ============================
-// TRAITEMENT EXEMPLAIRE
+// CHARGER EMPRUNTS
+// ============================
+
+async function chargerEmpruntsJeu(idJeu) {
+  setStatus("retourStatus", "Chargement", "...");
+
+  const res = await fetch(API_URL + "?action=getEmpruntsActifsByJeu&id_jeu=" + idJeu);
+  const data = await res.json();
+
+  const box = document.getElementById("retourResults");
+  box.innerHTML = "";
+
+  if (!data.emprunts || data.emprunts.length === 0) {
+    setStatus("retourStatus", "Aucun emprunt", "");
+    return;
+  }
+
+  // ✅ 1 seul → direct
+  if (data.emprunts.length === 1) {
+    traiterRetourExemplaire(data.emprunts[0].id_exemplaire);
+    return;
+  }
+
+  // ⚠️ plusieurs → choix
+  data.emprunts.forEach(e => {
+    const div = document.createElement("div");
+    div.className = "result-item";
+    div.innerHTML = `
+      <strong>${e.nom_adherent}</strong><br>
+      ${e.id_exemplaire}
+    `;
+
+    div.onclick = () => {
+      traiterRetourExemplaire(e.id_exemplaire);
+    };
+
+    box.appendChild(div);
+  });
+
+  box.classList.remove("hidden");
+}
+
+
+// ============================
+// TRAITER EXEMPLAIRE
 // ============================
 
 async function traiterRetourExemplaire(idEx) {
-  const url = API_URL
-    + "?action=getEmpruntActifByExemplaire"
-    + "&id_exemplaire=" + encodeURIComponent(idEx);
-
-  const res = await fetch(url);
+  const res = await fetch(API_URL + "?action=getEmpruntActifByExemplaire&id_exemplaire=" + idEx);
   const data = await res.json();
 
   if (!data.has_active_emprunt) {
-    setStatus("retourStatus", "Aucun emprunt", "Cet exemplaire n’est pas emprunté.");
+    setStatus("retourStatus", "Erreur", "Pas emprunté.");
     return;
   }
 
-  afficherConfirmationRetour({
-    id_exemplaire: idEx,
-    nom_adherent: data.nom_adherent,
-    retard: data.en_retard,
-    jours: data.nb_jours_retard
-  });
+  retourCourant = idEx;
+
+  document.getElementById("confirmTexte").textContent =
+    "Retour de " + idEx + " (" + data.nom_adherent + ")";
+
+  showView("viewConfirm");
 }
 
 
 // ============================
-// CONFIRMATION RETOUR
-// ============================
-
-function afficherConfirmationRetour(data) {
-  retourCourant = data;
-
-  document.getElementById("retourConfirmExemplaire").textContent = data.id_exemplaire;
-  document.getElementById("retourConfirmAdherent").textContent = data.nom_adherent;
-  document.getElementById("retourConfirmRetard").textContent =
-    data.retard ? data.jours + " jours de retard" : "À l’heure";
-
-  showView("viewRetourConfirm");
-  setHeaderSubtitle("Confirmer le retour.");
-}
-
-
-// ============================
-// VALIDATION RETOUR
+// CONFIRMER
 // ============================
 
 async function confirmerRetour() {
-  if (!retourCourant) return;
+  await fetch(API_URL + "?action=retourJeuByExemplaire&id_exemplaire=" + retourCourant);
 
-  const url = API_URL
-    + "?action=retourJeuByExemplaire"
-    + "&id_exemplaire=" + encodeURIComponent(retourCourant.id_exemplaire);
+  document.getElementById("successTexte").textContent =
+    "Retour effectué : " + retourCourant;
 
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if (!data.ok) {
-    alert(data.message);
-    return;
-  }
-
-  document.getElementById("retourSuccesDetail").textContent =
-    "Exemplaire " + retourCourant.id_exemplaire + " retourné.";
-
-  showView("viewRetourSucces");
-  setHeaderSubtitle("Retour enregistré.");
+  showView("viewSuccess");
 }
-    
-  window.onload = async () => {
-  await chargerIndex();
-  focusLater("adherentInput");
-};
+
+
+// ============================
+
+window.onload = chargerIndex;
+
 </script>
   
 </body>
