@@ -600,6 +600,22 @@
     }
   }
 
+    async function chargerAdherentComplet(idAdherent) {
+  const url = API_URL
+    + "?action=getAdherentByCode"
+    + "&code=" + encodeURIComponent(idAdherent);
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (!data.found) {
+    setStatus("statusAdherent", "Introuvable", "Impossible de charger la fiche complète.");
+    return;
+  }
+
+  afficherFicheAdherent(data);
+}
+
   async function rechercherAdherentUnique() {
     if (window.rechercheAdherentEnCours) return;
     window.rechercheAdherentEnCours = true;
@@ -679,11 +695,11 @@ const results = adherentsIndex.filter(a => {
           <div class="result-main">${item.nom_complet}</div>
           <div class="result-sub">ID : ${item.id_adherent}</div>
         `;
-        div.onclick = () => {
-          document.getElementById("adherentInput").value = item.id_adherent;
-          afficherFicheAdherent(item);
-          resultsBox.classList.add("hidden");
-        };
+        ddiv.onclick = async () => {
+  document.getElementById("adherentInput").value = item.id_adherent;
+  resultsBox.classList.add("hidden");
+  await chargerAdherentComplet(item.id_adherent);
+};
         resultsBox.appendChild(div);
       });
 
