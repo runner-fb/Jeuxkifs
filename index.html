@@ -648,9 +648,19 @@
 
       const query = input.toLowerCase();
 
-      const results = adherentsIndex.filter(a =>
-        a.nom_complet.toLowerCase().includes(query)
-      );
+const results = adherentsIndex.filter(a => {
+  const nom = String(a.nom || "").toLowerCase();
+  const prenom = String(a.prenom || "").toLowerCase();
+  const nomComplet = String(a.nom_complet || "").toLowerCase();
+  const nomInverse = (nom + " " + prenom).trim();
+
+  return (
+    nom.includes(query) ||
+    prenom.includes(query) ||
+    nomComplet.includes(query) ||
+    nomInverse.includes(query)
+  );
+});
 
       if (results.length === 0) {
         setStatus("statusAdherent", "Aucun résultat", "Aucun adhérent ne correspond.");
