@@ -635,6 +635,8 @@
   let adherentCourant = null;
   let jeuCourant = null;
   let exemplaireChoisi = null;
+    let retourCourant = null;
+let timerRetourUnique = null;
 
   async function chargerIndex() {
   try {
@@ -954,6 +956,20 @@ function rechercheAutoJeu() {
   }, 300);
 }
 
+function rechercheAutoRetourUnique() {
+  clearTimeout(timerRetourUnique);
+
+  timerRetourUnique = setTimeout(() => {
+    const input = document.getElementById("retourInput").value.trim();
+
+    if (input.length >= 2) {
+      rechercherRetourUnique();
+    }
+  }, 300);
+}
+
+    
+    
   async function rechercherJeuUnique() {
     if (window.rechercheJeuEnCours) return;
     window.rechercheJeuEnCours = true;
@@ -1298,6 +1314,133 @@ function retourRetourMultiple() {
   ouvrirRetourMultiple();
 }
 
+// ============================
+// RETOUR UNIQUE - LOGIQUE
+// ============================
+
+async function rechercherRetourUnique() {
+  const input = document.getElementById("retourInput").value.trim();
+
+  if (!input) {
+    setStatus("retourStatus", "Erreur", "Saisis un code ou un nom.");
+    return;
+  }
+
+  setStatus("retourStatus", "Recherche", "Analyse...");
+
+  try {
+    // ===== CAS EXEMPLAIRE (ex: 2181-1)
+    if (input.includes("-")) {
+      await traiterRetourExemplaire(input);
+      return;
+    }
+
+    // ===== CAS CODE BARRES
+    if (/^[0-9]+$/.test(input)) {
+      const url = API_URL + "?action=getJeuByEAN&ean=" + encodeURIComponent(input);
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.found) {
+        setStatus("retourStatus", "Info", "Jeu détecté (gestion bientôt)");
+        return;
+      }
+    }
+
+    // ===== CAS NOM JEU
+    const query = input.toLowerCase();
+
+    const results = jeuxIndex.filter(j =>
+      j.nom_jeu.toLowerCase().includes(query)
+    );
+
+    if (results.length === 0) {
+      setStatus("retourStatus", "Aucun résultat", "Aucun jeu trouvé.");
+      return;
+    }
+
+    if (results.length === 1) {
+      setStatus("retourStatus", "Info", "1 jeu trouvé (suite bientôt)");
+      return;
+    }
+
+    setStatus("retourStatus", "Résultats", "Affine la recherche.");
+
+  } catch (e) {
+    setStatus("retourStatus", "Erreur", e.message);
+  }
+}
+
+
+// ============================
+// TRAITEMENT EXEMPLAIRE
+// ============================
+
+async function traiterRetourExemplaire(idEx) {
+  const url = API_URL
+    + "?action=getEmpruntActifByExemplaire"
+    + "&id_exemplaire=" + encodeURIComponent(idEx);
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if (!data.has_active_emprunt) {
+    setStatus("retourStatus", "Aucun emprunt", "Cet exemplaire n’est pas emprunté.");
+    return;
+  }
+
+  afficherConfirmationRetour({
+    id_exemplaire: idEx,
+    nom_adherent: data.nom_adherent,
+    retard: data.en_retard,
+    jours: data.nb_jours_retard
+  });
+}
+
+
+// ============================
+// CONFIRMATION RETOUR
+// ============================
+
+function afficherConfirmationRetour(data) {
+  retourCourant = data;
+
+  document.getElementById("retourConfirmExemplaire").textContent = data.id_exemplaire;
+  document.getElementById("retourConfirmAdherent").textContent = data.nom_adherent;
+  document.getElementById("retourConfirmRetard").textContent =
+    data.retard ? data.jours + " jours de retard" : "À l’heure";
+
+  showView("viewRetourConfirm");
+  setHeaderSubtitle("Confirmer le retour.");
+}
+
+
+// ============================
+// VALIDATION RETOUR
+// ============================
+
+async function confirmerRetour() {
+  if (!retourCourant) return;
+
+  const url = API_URL
+    + "?action=retourJeuByExemplaire"
+    + "&id_exemplaire=" + encodeURIComponent(retourCourant.id_exemplaire);
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if (!data.ok) {
+    alert(data.message);
+    return;
+  }
+
+  document.getElementById("retourSuccesDetail").textContent =
+    "Exemplaire " + retourCourant.id_exemplaire + " retourné.";
+
+  showView("viewRetourSucces");
+  setHeaderSubtitle("Retour enregistré.");
+}
+    
   window.onload = async () => {
   await chargerIndex();
   focusLater("adherentInput");
