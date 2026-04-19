@@ -459,498 +459,85 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxvASN1BbWvvwLn2zRg_t_1GgysJaeNk2jJhQMMXHitTdrea8Ub2a3Kq-7pZpBVTMRSLQ/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbxvASN1BbWvvwLn2zRg_t_1GgysJaeNk2jJhQMMXHitTdrea8Ub2a3Kq-7pZpBVTMRSLQ/exec";
 
-    let adherentsIndex = [];
-    let jeuxIndex = [];
-    let adherentCourant = null;
-    let jeuCourant = null;
-    let exemplaireChoisi = null;
+  let adherentsIndex = [];
+  let jeuxIndex = [];
+  let adherentCourant = null;
+  let jeuCourant = null;
+  let exemplaireChoisi = null;
 
-    async function chargerIndex() {
-  const resAdh = await fetch(API_URL + "?action=getAdherentsIndex");
-  const dataAdh = await resAdh.json();
-  adherentsIndex = dataAdh.data || [];
+  async function chargerIndex() {
+    const resAdh = await fetch(API_URL + "?action=getAdherentsIndex");
+    const dataAdh = await resAdh.json();
+    adherentsIndex = dataAdh.data || [];
 
-  const resJeux = await fetch(API_URL + "?action=getJeuxIndex");
-  const dataJeux = await resJeux.json();
-  jeuxIndex = dataJeux.data || [];
-}
-
-    function setHeaderSubtitle(text) {
-      document.getElementById("headerSubtitle").textContent = text;
-    }
-
-    function showView(viewId) {
-      document.querySelectorAll(".view").forEach(view => {
-        view.classList.remove("active");
-      });
-      document.getElementById(viewId).classList.add("active");
-    }
-
-    function setStatus(boxId, title, text) {
-      const box = document.getElementById(boxId);
-      box.innerHTML = "<strong>" + title + "</strong><br>" + text;
-    }
-
-    function retourRechercheAdherent() {
-      adherentCourant = null;
-      jeuCourant = null;
-      exemplaireChoisi = null;
-
-      document.getElementById("adherentResults").innerHTML = "";
-      document.getElementById("adherentResults").classList.add("hidden");
-      document.getElementById("adherentInput").value = "";
-
-      showView("viewAdherent");
-      setHeaderSubtitle("Recherche un adhérent pour commencer.");
-      setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
-      document.getElementById("adherentInput").focus();
-    }
-
-    function retourFicheAdherent() {
-      jeuCourant = null;
-      exemplaireChoisi = null;
-
-      document.getElementById("jeuInput").value = "";
-      document.getElementById("jeuResults").innerHTML = "";
-      document.getElementById("jeuResults").classList.add("hidden");
-      document.getElementById("jeuSelection").classList.add("hidden");
-      document.getElementById("jeuNomSelection").textContent = "";
-      document.getElementById("jeuEtatSelection").textContent = "";
-      document.getElementById("exemplairesZone").innerHTML = "";
-      document.getElementById("exemplairesBloc").classList.add("hidden");
-      document.getElementById("btnValiderEmprunt").classList.add("hidden");
-
-      showView("viewFiche");
-      setHeaderSubtitle("Consulte la fiche de l’adhérent.");
-      setStatus("statusFiche", "Fiche chargée.", "Vérifie les informations avant de continuer.");
-    }
-
-    function ouvrirVueJeu() {
-      jeuCourant = null;
-      exemplaireChoisi = null;
-
-      document.getElementById("jeuInput").value = "";
-      document.getElementById("jeuResults").innerHTML = "";
-      document.getElementById("jeuResults").classList.add("hidden");
-      document.getElementById("jeuSelection").classList.add("hidden");
-      document.getElementById("jeuNomSelection").textContent = "";
-      document.getElementById("jeuEtatSelection").textContent = "";
-      document.getElementById("exemplairesZone").innerHTML = "";
-      document.getElementById("exemplairesBloc").classList.add("hidden");
-      document.getElementById("btnValiderEmprunt").classList.add("hidden");
-
-      showView("viewJeu");
-      setHeaderSubtitle("Recherche un jeu à emprunter.");
-      setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
-      document.getElementById("jeuInput").focus();
-    }
-
-    function afficherFicheAdherent(data) {
-      adherentCourant = data;
-
-      document.getElementById("nomComplet").textContent = data.nom_complet || "";
-
-      const badge = document.getElementById("badgeStatut");
-      const peutEmprunter = String(data.peut_emprunter || "").toLowerCase() === "oui";
-
-      badge.textContent = peutEmprunter ? "Peut emprunter" : "Emprunt impossible";
-      badge.className = "badge " + (peutEmprunter ? "badge-ok" : "badge-ko");
-
-      const motifBox = document.getElementById("motifBlocage");
-      if (!peutEmprunter && data.motif_blocage) {
-        motifBox.textContent = data.motif_blocage;
-        motifBox.classList.remove("hidden");
-      } else {
-        motifBox.textContent = "";
-        motifBox.classList.add("hidden");
-      }
-
-      document.getElementById("empruntsEnCours").textContent = data.emprunts_en_cours ?? "";
-      document.getElementById("statutEmprunt").textContent = data.statut_emprunt || "";
-      document.getElementById("jeuxEnCours").textContent = data.jeux_en_cours || "";
-      document.getElementById("nbRetards").textContent = data.nb_retards ?? "";
-      document.getElementById("profil").textContent = data.profil || "";
-
-      const btnChoisirJeu = document.getElementById("btnChoisirJeu");
-      if (peutEmprunter) {
-        btnChoisirJeu.classList.remove("hidden");
-      } else {
-        btnChoisirJeu.classList.add("hidden");
-      }
-
-      showView("viewFiche");
-      setHeaderSubtitle("Consulte la fiche de l’adhérent.");
-
-      if (peutEmprunter) {
-        setStatus("statusFiche", "Adhérent autorisé", "Tu peux passer au choix du jeu.");
-      } else {
-        setStatus("statusFiche", "Adhérent bloqué", data.motif_blocage || "Emprunt impossible.");
-      }
-    }
-
-    async function rechercherAdherentUnique() {
-  if (window.rechercheAdherentEnCours) return;
-  window.rechercheAdherentEnCours = true;
-
-  const input = document.getElementById("adherentInput").value.trim();
-  const resultsBox = document.getElementById("adherentResults");
-  const btn = document.getElementById("btnRechercherAdherent");
-
-  resultsBox.innerHTML = "";
-  resultsBox.classList.add("hidden");
-
-  if (!input) {
-    setStatus("statusAdherent", "Erreur", "Veuillez saisir un code ou un nom.");
-    window.rechercheAdherentEnCours = false;
-    return;
+    const resJeux = await fetch(API_URL + "?action=getJeuxIndex");
+    const dataJeux = await resJeux.json();
+    jeuxIndex = dataJeux.data || [];
   }
 
-  btn.disabled = true;
-  btn.textContent = "Recherche...";
+  function setHeaderSubtitle(text) {
+    document.getElementById("headerSubtitle").textContent = text;
+  }
 
-  try {
-    const estUnCode = /^[0-9]+$/.test(input);
-
-    // 🔹 CAS 1 — CODE ADHÉRENT
-    if (estUnCode) {
-      const directUrl = API_URL
-        + "?action=getAdherentByCode"
-        + "&code=" + encodeURIComponent(input);
-
-      const directResponse = await fetch(directUrl);
-      const directData = await directResponse.json();
-
-      if (directData.found) {
-        afficherFicheAdherent(directData);
-        btn.disabled = false;
-        btn.textContent = "Rechercher";
-        window.rechercheAdherentEnCours = false;
-        return;
-      }
-
-      setStatus("statusAdherent", "Introuvable", "Aucun adhérent trouvé.");
-      btn.disabled = false;
-      btn.textContent = "Rechercher";
-      window.rechercheAdherentEnCours = false;
-      return;
-    }
-
-    // 🔹 CAS 2 — RECHERCHE NOM (LOCAL)
-    const query = input.toLowerCase();
-
-    const results = adherentsIndex.filter(a =>
-      a.nom_complet.toLowerCase().includes(query)
-    );
-
-    if (results.length === 0) {
-      setStatus("statusAdherent", "Aucun résultat", "Aucun adhérent ne correspond.");
-      btn.disabled = false;
-      btn.textContent = "Rechercher";
-      window.rechercheAdherentEnCours = false;
-      return;
-    }
-
-    resultsBox.innerHTML = "";
-
-    results.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "result-item";
-      div.innerHTML = `
-        <div class="result-main">${item.nom_complet}</div>
-        <div class="result-sub">ID : ${item.id_adherent}</div>
-      `;
-      div.onclick = () => {
-        document.getElementById("adherentInput").value = item.id_adherent;
-        afficherFicheAdherent(item);
-        resultsBox.classList.add("hidden");
-      };
-      resultsBox.appendChild(div);
+  function showView(viewId) {
+    document.querySelectorAll(".view").forEach(view => {
+      view.classList.remove("active");
     });
-
-    resultsBox.classList.remove("hidden");
-    setStatus("statusAdherent", "Résultats", "Sélectionne un adhérent.");
-
-  } catch (e) {
-    setStatus("statusAdherent", "Erreur", e.message);
+    document.getElementById(viewId).classList.add("active");
   }
 
-  btn.disabled = false;
-  btn.textContent = "Rechercher";
-  window.rechercheAdherentEnCours = false;
-}
-
-    async function rechercherJeuUnique() {
-  if (window.rechercheJeuEnCours) return;
-  window.rechercheJeuEnCours = true;
-
-  const input = document.getElementById("jeuInput").value.trim();
-  const resultsBox = document.getElementById("jeuResults");
-  const btn = document.getElementById("btnRechercheJeu");
-
-  resultsBox.innerHTML = "";
-  resultsBox.classList.add("hidden");
-
-  if (!input) {
-    setStatus("statusJeu", "Erreur", "Veuillez saisir un code ou un nom de jeu.");
-    window.rechercheJeuEnCours = false;
-    return;
+  function setStatus(boxId, title, text) {
+    const box = document.getElementById(boxId);
+    box.innerHTML = "<strong>" + title + "</strong><br>" + text;
   }
 
-  btn.disabled = true;
-  btn.textContent = "Recherche...";
+  function retourRechercheAdherent() {
+    adherentCourant = null;
+    jeuCourant = null;
+    exemplaireChoisi = null;
 
-  try {
-    const estUnCodeBarres = /^[0-9]+$/.test(input);
+    document.getElementById("adherentResults").innerHTML = "";
+    document.getElementById("adherentResults").classList.add("hidden");
+    document.getElementById("adherentInput").value = "";
 
-    if (estUnCodeBarres) {
-      const directUrl = API_URL
-        + "?action=getJeuByEAN"
-        + "&ean=" + encodeURIComponent(input);
+    document.getElementById("jeuResults").innerHTML = "";
+    document.getElementById("jeuResults").classList.add("hidden");
+    document.getElementById("jeuInput").value = "";
+    document.getElementById("jeuSelection").classList.add("hidden");
+    document.getElementById("jeuNomSelection").textContent = "";
+    document.getElementById("jeuEtatSelection").textContent = "";
+    document.getElementById("exemplairesZone").innerHTML = "";
+    document.getElementById("exemplairesBloc").classList.add("hidden");
+    document.getElementById("btnValiderEmprunt").classList.add("hidden");
 
-      const directResponse = await fetch(directUrl);
-      const directData = await directResponse.json();
-
-      if (directData.found) {
-        await selectionnerJeu(directData);
-        btn.disabled = false;
-        btn.textContent = "Rechercher";
-        window.rechercheJeuEnCours = false;
-        return;
-      }
-
-      setStatus("statusJeu", "Introuvable", "Aucun jeu trouvé.");
-      btn.disabled = false;
-      btn.textContent = "Rechercher";
-      window.rechercheJeuEnCours = false;
-      return;
-    }
-
-    const query = input.toLowerCase();
-
-    const results = jeuxIndex.filter(j =>
-      j.nom_jeu.toLowerCase().includes(query)
-    );
-
-    if (results.length === 0) {
-      setStatus("statusJeu", "Aucun résultat", "Aucun jeu ne correspond.");
-      btn.disabled = false;
-      btn.textContent = "Rechercher";
-      window.rechercheJeuEnCours = false;
-      return;
-    }
-
-    resultsBox.innerHTML = "";
-
-    results.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "result-item";
-      div.innerHTML = `
-        <div class="result-main">${item.nom_jeu}</div>
-        <div class="result-sub">ID : ${item.id_jeu}</div>
-      `;
-      div.onclick = () => {
-        selectionnerJeu(item);
-        resultsBox.classList.add("hidden");
-      };
-      resultsBox.appendChild(div);
-    });
-
-    resultsBox.classList.remove("hidden");
-    setStatus("statusJeu", "Résultats", "Sélectionne un jeu.");
-
-  } catch (e) {
-    setStatus("statusJeu", "Erreur", e.message);
+    showView("viewAdherent");
+    setHeaderSubtitle("Recherche un adhérent pour commencer.");
+    setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
+    document.getElementById("adherentInput").focus();
   }
 
-  btn.disabled = false;
-  btn.textContent = "Rechercher";
-  window.rechercheJeuEnCours = false;
-}
-    async function selectionnerJeu(item) {
-      jeuCourant = item;
-      exemplaireChoisi = null;
+  function retourFicheAdherent() {
+    jeuCourant = null;
+    exemplaireChoisi = null;
 
-      document.getElementById("jeuSelection").classList.remove("hidden");
-      document.getElementById("jeuNomSelection").textContent = item.nom_jeu || "";
+    document.getElementById("jeuInput").value = "";
+    document.getElementById("jeuResults").innerHTML = "";
+    document.getElementById("jeuResults").classList.add("hidden");
+    document.getElementById("jeuSelection").classList.add("hidden");
+    document.getElementById("jeuNomSelection").textContent = "";
+    document.getElementById("jeuEtatSelection").textContent = "";
+    document.getElementById("exemplairesZone").innerHTML = "";
+    document.getElementById("exemplairesBloc").classList.add("hidden");
+    document.getElementById("btnValiderEmprunt").classList.add("hidden");
 
-      if (!item.empruntable && !item.emprunt_autorise) {
-        document.getElementById("jeuEtatSelection").textContent = "Jeu désactivé.";
-        setStatus("statusJeu", "Jeu non empruntable", "Ce jeu est désactivé.");
-        document.getElementById("exemplairesZone").innerHTML = "";
-        document.getElementById("exemplairesBloc").classList.add("hidden");
-        return;
-      }
-
-document.getElementById("jeuEtatSelection").textContent = "Jeu trouvé. Vérification de la disponibilité...";
-await chargerExemplaires(item.id_jeu);
-    }
-
-    async function chargerExemplaires(idJeu) {
-      setStatus("statusJeu", "Recherche exemplaires", "Chargement...");
-
-      try {
-        const url = API_URL
-          + "?action=getExemplairesDisponiblesByJeu"
-          + "&id_jeu=" + encodeURIComponent(idJeu);
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        const zone = document.getElementById("exemplairesZone");
-        const bloc = document.getElementById("exemplairesBloc");
-        zone.innerHTML = "";
-
-        if (!data.exemplaires_disponibles || data.exemplaires_disponibles.length === 0) {
-  document.getElementById("jeuEtatSelection").textContent = "Jeu non disponible actuellement.";
-  setStatus("statusJeu", "Aucun exemplaire", "Actuellement empruntés.");
-  bloc.classList.add("hidden");
-  return;
-}
-
-       if (data.exemplaires_disponibles.length === 1) {
-  const ex = data.exemplaires_disponibles[0];
-  exemplaireChoisi = ex.id_exemplaire;
-  bloc.classList.add("hidden");
-  document.getElementById("btnValiderEmprunt").classList.remove("hidden");
-  document.getElementById("jeuEtatSelection").textContent = "Jeu disponible.";
-  setStatus("statusJeu", "Exemplaire sélectionné", "Un seul exemplaire disponible → sélection automatique.");
-  return;
-}
-
-        data.exemplaires_disponibles.forEach(ex => {
-          const div = document.createElement("div");
-          div.className = "result-item";
-          div.innerHTML = `
-            <div class="result-main">Exemplaire n°${ex.numero}</div>
-            <div class="result-sub">Cliquer pour sélectionner</div>
-          `;
-          div.onclick = () => {
-  exemplaireChoisi = ex.id_exemplaire;
-  document.getElementById("btnValiderEmprunt").classList.remove("hidden");
-  setStatus("statusJeu", "Exemplaire sélectionné", "Exemplaire n°" + ex.numero + " sélectionné.");
-};
-          zone.appendChild(div);
-        });
-document.getElementById("jeuEtatSelection").textContent = data.exemplaires_disponibles.length + " exemplaires disponibles.";
-        bloc.classList.remove("hidden");
-        setStatus("statusJeu", "Choix exemplaire", "Choisis un exemplaire disponible.");
-
-      } catch (error) {
-        setStatus("statusJeu", "Erreur", error.message);
-      }
-    }
-function reinitialiserTout() {
-  adherentCourant = null;
-  jeuCourant = null;
-  exemplaireChoisi = null;
-
-  document.getElementById("adherentInput").value = "";
-  document.getElementById("jeuInput").value = "";
-
-  document.getElementById("adherentResults").innerHTML = "";
-  document.getElementById("adherentResults").classList.add("hidden");
-
-  document.getElementById("jeuResults").innerHTML = "";
-  document.getElementById("jeuResults").classList.add("hidden");
-
-  document.getElementById("jeuSelection").classList.add("hidden");
-  document.getElementById("jeuNomSelection").textContent = "";
-  document.getElementById("jeuEtatSelection").textContent = "";
-
-  document.getElementById("exemplairesZone").innerHTML = "";
-  document.getElementById("exemplairesBloc").classList.add("hidden");
-  document.getElementById("btnValiderEmprunt").classList.add("hidden");
-  
-  showView("viewAdherent");
-  setHeaderSubtitle("Recherche un adhérent pour commencer.");
-  setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
-}
-    
-    async function validerEmprunt() {
-  const btn = document.getElementById("btnValiderEmprunt");
-
-  if (!adherentCourant) {
-    setStatus("statusJeu", "Adhérent manquant", "Aucun adhérent sélectionné.");
-    return;
+    showView("viewFiche");
+    setHeaderSubtitle("Consulte la fiche de l’adhérent.");
+    setStatus("statusFiche", "Fiche chargée.", "Vérifie les informations avant de continuer.");
   }
 
-  if (!jeuCourant) {
-    setStatus("statusJeu", "Jeu manquant", "Aucun jeu sélectionné.");
-    return;
-  }
-
-  if (!exemplaireChoisi) {
-    setStatus("statusJeu", "Exemplaire manquant", "Choisis un exemplaire avant de valider.");
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = "Validation...";
-
-  try {
-    const url = API_URL
-  + "?action=createEmprunt"
-  + "&id_adherent=" + encodeURIComponent(adherentCourant.id_adherent)
-  + "&id_exemplaire=" + encodeURIComponent(exemplaireChoisi);
-
-const response = await fetch(url);
-const data = await response.json();
-
-    if (!data.ok) {
-      setStatus("statusJeu", "Échec", data.message || "Impossible d’enregistrer l’emprunt.");
-      return;
-    }
-
-    const nomAdherent = adherentCourant.nom_complet || "";
-const nomJeu = jeuCourant?.nom_jeu || "";
-const idEx = exemplaireChoisi || "";
-
-document.getElementById("successTitre").textContent = "Emprunt enregistré";
-document.getElementById("successDetail").textContent =
-  nomAdherent + " a emprunté " + nomJeu + " (" + idEx + ").";
-
-showView("viewSucces");
-setHeaderSubtitle("Emprunt enregistré.");
-setStatus("statusSucces", "Succès.", "Choisis la suite.");
-
-  } catch (error) {
-    setStatus("statusJeu", "Erreur", error.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Valider l’emprunt";
-  }
-}
-    async function emprunterAutreJeu() {
-  if (!adherentCourant || !adherentCourant.id_adherent) {
-    reinitialiserTout();
-    return;
-  }
-
-  setStatus("statusSucces", "Vérification", "Actualisation de la fiche adhérent...");
-
-  try {
-    const url = API_URL
-      + "?action=getAdherentByCode"
-      + "&code=" + encodeURIComponent(adherentCourant.id_adherent);
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.found) {
-      reinitialiserTout();
-      return;
-    }
-
-    adherentCourant = data;
-
-    if (String(data.peut_emprunter || "").toLowerCase() !== "oui") {
-      afficherFicheAdherent(data);
-      setStatus("statusFiche", "Adhérent bloqué", data.motif_blocage || "Emprunt impossible.");
-      return;
-    }
-
+  function ouvrirVueJeu() {
     jeuCourant = null;
     exemplaireChoisi = null;
 
@@ -968,14 +555,443 @@ setStatus("statusSucces", "Succès.", "Choisis la suite.");
     setHeaderSubtitle("Recherche un jeu à emprunter.");
     setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
     document.getElementById("jeuInput").focus();
-
-  } catch (error) {
-    setStatus("statusSucces", "Erreur", error.message);
   }
-}
-    window.onload = () => {
-  chargerIndex();
-};
-  </script>
+
+  function afficherFicheAdherent(data) {
+    adherentCourant = data;
+
+    document.getElementById("nomComplet").textContent = data.nom_complet || "";
+
+    const badge = document.getElementById("badgeStatut");
+    const peutEmprunter = String(data.peut_emprunter || "").toLowerCase() === "oui";
+
+    badge.textContent = peutEmprunter ? "Peut emprunter" : "Emprunt impossible";
+    badge.className = "badge " + (peutEmprunter ? "badge-ok" : "badge-ko");
+
+    const motifBox = document.getElementById("motifBlocage");
+    if (!peutEmprunter && data.motif_blocage) {
+      motifBox.textContent = data.motif_blocage;
+      motifBox.classList.remove("hidden");
+    } else {
+      motifBox.textContent = "";
+      motifBox.classList.add("hidden");
+    }
+
+    document.getElementById("empruntsEnCours").textContent = data.emprunts_en_cours ?? "";
+    document.getElementById("statutEmprunt").textContent = data.statut_emprunt || "";
+    document.getElementById("jeuxEnCours").textContent = data.jeux_en_cours || "";
+    document.getElementById("nbRetards").textContent = data.nb_retards ?? "";
+    document.getElementById("profil").textContent = data.profil || "";
+
+    const btnChoisirJeu = document.getElementById("btnChoisirJeu");
+    if (peutEmprunter) {
+      btnChoisirJeu.classList.remove("hidden");
+    } else {
+      btnChoisirJeu.classList.add("hidden");
+    }
+
+    showView("viewFiche");
+    setHeaderSubtitle("Consulte la fiche de l’adhérent.");
+
+    if (peutEmprunter) {
+      setStatus("statusFiche", "Adhérent autorisé", "Tu peux passer au choix du jeu.");
+    } else {
+      setStatus("statusFiche", "Adhérent bloqué", data.motif_blocage || "Emprunt impossible.");
+    }
+  }
+
+  async function rechercherAdherentUnique() {
+    if (window.rechercheAdherentEnCours) return;
+    window.rechercheAdherentEnCours = true;
+
+    const input = document.getElementById("adherentInput").value.trim();
+    const resultsBox = document.getElementById("adherentResults");
+    const btn = document.getElementById("btnRechercheAdherent");
+
+    resultsBox.innerHTML = "";
+    resultsBox.classList.add("hidden");
+
+    if (!input) {
+      setStatus("statusAdherent", "Erreur", "Veuillez saisir un code ou un nom.");
+      window.rechercheAdherentEnCours = false;
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Recherche...";
+
+    try {
+      const estUnCode = /^[0-9]+$/.test(input);
+
+      if (estUnCode) {
+        const directUrl = API_URL
+          + "?action=getAdherentByCode"
+          + "&code=" + encodeURIComponent(input);
+
+        const directResponse = await fetch(directUrl);
+        const directData = await directResponse.json();
+
+        if (directData.found) {
+          afficherFicheAdherent(directData);
+          btn.disabled = false;
+          btn.textContent = "Rechercher";
+          window.rechercheAdherentEnCours = false;
+          return;
+        }
+
+        setStatus("statusAdherent", "Introuvable", "Aucun adhérent trouvé.");
+        btn.disabled = false;
+        btn.textContent = "Rechercher";
+        window.rechercheAdherentEnCours = false;
+        return;
+      }
+
+      const query = input.toLowerCase();
+
+      const results = adherentsIndex.filter(a =>
+        a.nom_complet.toLowerCase().includes(query)
+      );
+
+      if (results.length === 0) {
+        setStatus("statusAdherent", "Aucun résultat", "Aucun adhérent ne correspond.");
+        btn.disabled = false;
+        btn.textContent = "Rechercher";
+        window.rechercheAdherentEnCours = false;
+        return;
+      }
+
+      resultsBox.innerHTML = "";
+
+      results.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "result-item";
+        div.innerHTML = `
+          <div class="result-main">${item.nom_complet}</div>
+          <div class="result-sub">ID : ${item.id_adherent}</div>
+        `;
+        div.onclick = () => {
+          document.getElementById("adherentInput").value = item.id_adherent;
+          afficherFicheAdherent(item);
+          resultsBox.classList.add("hidden");
+        };
+        resultsBox.appendChild(div);
+      });
+
+      resultsBox.classList.remove("hidden");
+      setStatus("statusAdherent", "Résultats", "Sélectionne un adhérent.");
+
+    } catch (e) {
+      setStatus("statusAdherent", "Erreur", e.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Rechercher";
+    window.rechercheAdherentEnCours = false;
+  }
+
+  async function rechercherJeuUnique() {
+    if (window.rechercheJeuEnCours) return;
+    window.rechercheJeuEnCours = true;
+
+    const input = document.getElementById("jeuInput").value.trim();
+    const resultsBox = document.getElementById("jeuResults");
+    const btn = document.getElementById("btnRechercheJeu");
+
+    resultsBox.innerHTML = "";
+    resultsBox.classList.add("hidden");
+
+    if (!input) {
+      setStatus("statusJeu", "Erreur", "Veuillez saisir un code ou un nom de jeu.");
+      window.rechercheJeuEnCours = false;
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Recherche...";
+
+    try {
+      const estUnCodeBarres = /^[0-9]+$/.test(input);
+
+      if (estUnCodeBarres) {
+        const directUrl = API_URL
+          + "?action=getJeuByEAN"
+          + "&ean=" + encodeURIComponent(input);
+
+        const directResponse = await fetch(directUrl);
+        const directData = await directResponse.json();
+
+        if (directData.found) {
+          await selectionnerJeu(directData);
+          btn.disabled = false;
+          btn.textContent = "Rechercher";
+          window.rechercheJeuEnCours = false;
+          return;
+        }
+
+        setStatus("statusJeu", "Introuvable", "Aucun jeu trouvé.");
+        btn.disabled = false;
+        btn.textContent = "Rechercher";
+        window.rechercheJeuEnCours = false;
+        return;
+      }
+
+      const query = input.toLowerCase();
+
+      const results = jeuxIndex.filter(j =>
+        j.nom_jeu.toLowerCase().includes(query)
+      );
+
+      if (results.length === 0) {
+        setStatus("statusJeu", "Aucun résultat", "Aucun jeu ne correspond.");
+        btn.disabled = false;
+        btn.textContent = "Rechercher";
+        window.rechercheJeuEnCours = false;
+        return;
+      }
+
+      resultsBox.innerHTML = "";
+
+      results.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "result-item";
+        div.innerHTML = `
+          <div class="result-main">${item.nom_jeu}</div>
+          <div class="result-sub">ID : ${item.id_jeu}</div>
+        `;
+        div.onclick = () => {
+          selectionnerJeu(item);
+          resultsBox.classList.add("hidden");
+        };
+        resultsBox.appendChild(div);
+      });
+
+      resultsBox.classList.remove("hidden");
+      setStatus("statusJeu", "Résultats", "Sélectionne un jeu.");
+
+    } catch (e) {
+      setStatus("statusJeu", "Erreur", e.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Rechercher";
+    window.rechercheJeuEnCours = false;
+  }
+
+  async function selectionnerJeu(item) {
+    jeuCourant = item;
+    exemplaireChoisi = null;
+
+    document.getElementById("jeuSelection").classList.remove("hidden");
+    document.getElementById("jeuNomSelection").textContent = item.nom_jeu || "";
+
+    if (!item.empruntable && !item.emprunt_autorise) {
+      document.getElementById("jeuEtatSelection").textContent = "Jeu désactivé.";
+      setStatus("statusJeu", "Jeu non empruntable", "Ce jeu est désactivé.");
+      document.getElementById("exemplairesZone").innerHTML = "";
+      document.getElementById("exemplairesBloc").classList.add("hidden");
+      document.getElementById("btnValiderEmprunt").classList.add("hidden");
+      return;
+    }
+
+    document.getElementById("jeuEtatSelection").textContent = "Jeu trouvé. Vérification de la disponibilité...";
+    await chargerExemplaires(item.id_jeu);
+  }
+
+  async function chargerExemplaires(idJeu) {
+    setStatus("statusJeu", "Recherche exemplaires", "Chargement...");
+
+    try {
+      const url = API_URL
+        + "?action=getExemplairesDisponiblesByJeu"
+        + "&id_jeu=" + encodeURIComponent(idJeu);
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      const zone = document.getElementById("exemplairesZone");
+      const bloc = document.getElementById("exemplairesBloc");
+      zone.innerHTML = "";
+
+      if (!data.exemplaires_disponibles || data.exemplaires_disponibles.length === 0) {
+        document.getElementById("jeuEtatSelection").textContent = "Jeu non disponible actuellement.";
+        setStatus("statusJeu", "Aucun exemplaire", "Actuellement empruntés.");
+        bloc.classList.add("hidden");
+        document.getElementById("btnValiderEmprunt").classList.add("hidden");
+        return;
+      }
+
+      if (data.exemplaires_disponibles.length === 1) {
+        const ex = data.exemplaires_disponibles[0];
+        exemplaireChoisi = ex.id_exemplaire;
+        bloc.classList.add("hidden");
+        document.getElementById("btnValiderEmprunt").classList.remove("hidden");
+        document.getElementById("jeuEtatSelection").textContent = "Jeu disponible.";
+        setStatus("statusJeu", "Exemplaire sélectionné", "Un seul exemplaire disponible → sélection automatique.");
+        return;
+      }
+
+      data.exemplaires_disponibles.forEach(ex => {
+        const div = document.createElement("div");
+        div.className = "result-item";
+        div.innerHTML = `
+          <div class="result-main">Exemplaire n°${ex.numero}</div>
+          <div class="result-sub">Cliquer pour sélectionner</div>
+        `;
+        div.onclick = () => {
+          exemplaireChoisi = ex.id_exemplaire;
+          document.getElementById("btnValiderEmprunt").classList.remove("hidden");
+          setStatus("statusJeu", "Exemplaire sélectionné", "Exemplaire n°" + ex.numero + " sélectionné.");
+        };
+        zone.appendChild(div);
+      });
+
+      document.getElementById("jeuEtatSelection").textContent = data.exemplaires_disponibles.length + " exemplaires disponibles.";
+      bloc.classList.remove("hidden");
+      setStatus("statusJeu", "Choix exemplaire", "Choisis un exemplaire disponible.");
+
+    } catch (error) {
+      setStatus("statusJeu", "Erreur", error.message);
+    }
+  }
+
+  function reinitialiserTout() {
+    adherentCourant = null;
+    jeuCourant = null;
+    exemplaireChoisi = null;
+
+    document.getElementById("adherentInput").value = "";
+    document.getElementById("jeuInput").value = "";
+
+    document.getElementById("adherentResults").innerHTML = "";
+    document.getElementById("adherentResults").classList.add("hidden");
+
+    document.getElementById("jeuResults").innerHTML = "";
+    document.getElementById("jeuResults").classList.add("hidden");
+
+    document.getElementById("jeuSelection").classList.add("hidden");
+    document.getElementById("jeuNomSelection").textContent = "";
+    document.getElementById("jeuEtatSelection").textContent = "";
+
+    document.getElementById("exemplairesZone").innerHTML = "";
+    document.getElementById("exemplairesBloc").classList.add("hidden");
+    document.getElementById("btnValiderEmprunt").classList.add("hidden");
+
+    showView("viewAdherent");
+    setHeaderSubtitle("Recherche un adhérent pour commencer.");
+    setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
+  }
+
+  async function validerEmprunt() {
+    const btn = document.getElementById("btnValiderEmprunt");
+
+    if (!adherentCourant) {
+      setStatus("statusJeu", "Adhérent manquant", "Aucun adhérent sélectionné.");
+      return;
+    }
+
+    if (!jeuCourant) {
+      setStatus("statusJeu", "Jeu manquant", "Aucun jeu sélectionné.");
+      return;
+    }
+
+    if (!exemplaireChoisi) {
+      setStatus("statusJeu", "Exemplaire manquant", "Choisis un exemplaire avant de valider.");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Validation...";
+
+    try {
+      const url = API_URL
+        + "?action=createEmprunt"
+        + "&id_adherent=" + encodeURIComponent(adherentCourant.id_adherent)
+        + "&id_exemplaire=" + encodeURIComponent(exemplaireChoisi);
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!data.ok) {
+        setStatus("statusJeu", "Échec", data.message || "Impossible d’enregistrer l’emprunt.");
+        return;
+      }
+
+      const nomAdherent = adherentCourant.nom_complet || "";
+      const nomJeu = jeuCourant?.nom_jeu || "";
+      const idEx = exemplaireChoisi || "";
+
+      document.getElementById("successTitre").textContent = "Emprunt enregistré";
+      document.getElementById("successDetail").textContent =
+        nomAdherent + " a emprunté " + nomJeu + " (" + idEx + ").";
+
+      showView("viewSucces");
+      setHeaderSubtitle("Emprunt enregistré.");
+      setStatus("statusSucces", "Succès.", "Choisis la suite.");
+
+    } catch (error) {
+      setStatus("statusJeu", "Erreur", error.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Valider l’emprunt";
+    }
+  }
+
+  async function emprunterAutreJeu() {
+    if (!adherentCourant || !adherentCourant.id_adherent) {
+      reinitialiserTout();
+      return;
+    }
+
+    setStatus("statusSucces", "Vérification", "Actualisation de la fiche adhérent...");
+
+    try {
+      const url = API_URL
+        + "?action=getAdherentByCode"
+        + "&code=" + encodeURIComponent(adherentCourant.id_adherent);
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!data.found) {
+        reinitialiserTout();
+        return;
+      }
+
+      adherentCourant = data;
+
+      if (String(data.peut_emprunter || "").toLowerCase() !== "oui") {
+        afficherFicheAdherent(data);
+        setStatus("statusFiche", "Adhérent bloqué", data.motif_blocage || "Emprunt impossible.");
+        return;
+      }
+
+      jeuCourant = null;
+      exemplaireChoisi = null;
+
+      document.getElementById("jeuInput").value = "";
+      document.getElementById("jeuResults").innerHTML = "";
+      document.getElementById("jeuResults").classList.add("hidden");
+      document.getElementById("jeuSelection").classList.add("hidden");
+      document.getElementById("jeuNomSelection").textContent = "";
+      document.getElementById("jeuEtatSelection").textContent = "";
+      document.getElementById("exemplairesZone").innerHTML = "";
+      document.getElementById("exemplairesBloc").classList.add("hidden");
+      document.getElementById("btnValiderEmprunt").classList.add("hidden");
+
+      showView("viewJeu");
+      setHeaderSubtitle("Recherche un jeu à emprunter.");
+      setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
+      document.getElementById("jeuInput").focus();
+
+    } catch (error) {
+      setStatus("statusSucces", "Erreur", error.message);
+    }
+  }
+
+  window.onload = () => {
+    chargerIndex();
+  };
+</script>
+  
 </body>
 </html>
