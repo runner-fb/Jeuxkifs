@@ -542,7 +542,8 @@
 setHeaderSubtitle("Recherche un adhérent pour commencer.");
 setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
 focusLater("adherentInput");
-
+  }
+    
   function retourFicheAdherent() {
     jeuCourant = null;
     exemplaireChoisi = null;
@@ -580,7 +581,8 @@ focusLater("adherentInput");
 setHeaderSubtitle("Recherche un jeu à emprunter.");
 setStatus("statusJeu", "Prêt.", "Scanne un code-barres ou saisis un nom de jeu.");
 focusLater("jeuInput");
-
+  }
+    
   function afficherFicheAdherent(data) {
     adherentCourant = data;
 
@@ -981,7 +983,8 @@ function rechercheAutoJeu() {
 setHeaderSubtitle("Recherche un adhérent pour commencer.");
 setStatus("statusAdherent", "Prêt.", "En attente d’une recherche adhérent.");
 focusLater("adherentInput");
-
+  }
+    
   async function validerEmprunt() {
     const btn = document.getElementById("btnValiderEmprunt");
 
@@ -1093,7 +1096,6 @@ focusLater("jeuInput");
   await chargerIndex();
   focusLater("adherentInput");
 };
-  };
 </script>
   
 </body>
